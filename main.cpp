@@ -46,6 +46,7 @@ int main()
 		std::cerr << "Can't listen!" << std::endl;
 		return (-3);
 	}
+	//TODO ab hier weiter
 	// Accept a call
 	sockaddr_in client;
 	socklen_t clientSize = sizeof(client);
