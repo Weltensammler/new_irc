@@ -1,2 +1,28 @@
-:Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n
-"from" "command" "to" "message"
+PRIVMSG:
+	:Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n
+	"from" "command" "to" "message"
+
+https://stackoverflow.com/questions/43399621/join-command-for-irc-protocol
+JOIN:
+	/join #channelname //client format
+	JOIN #channelname //reveived by server
+
+	-Server repeats/verifies JOIN command
+	:<UserJID> JOIN :<ChannelName>
+	:ben JOIN :ch1
+
+
+	-Server sends channel topic
+	:<Domain> <[RPL_TOPIC][1]> <NickName> <ChannelName> :<Topic>
+	:local 332 ben ch1 :Welcome to the channel!
+
+	-Server sends list of users in the joined channel 
+	 (which can sometime be sent in chunks, due to message size limitation on IRC).
+	 :<Domain> <[RPL_NAMREPLY][1]> <NickName> = <ChannelName> : <NameList>
+	 :local 353 ben = #ch1 :ben
+	 :<Domain> <[RPL_ENDOFNAMES][1]> <NickName> <ChannelName> :End of Names list
+
+KICK;
+	/kick #ch1,#ch2.... bene1 bene2.... reason //hastag bei channelname ?
+	"command" "channel/s" "user/s" optional reasons "als text"
+	KICK Bene #ch1,#ch2 :bene1,bene2 reason

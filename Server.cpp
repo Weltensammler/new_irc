@@ -139,10 +139,13 @@ void Server::readinput(int clientfd)
 		std::cerr << "The Client disconnected!" << std::endl;
 		clientfd *= -1; // it will be ignored in future
 	}
+	//TODO everything from here on has to be moved to the else and in there to a parser
 	else // data from client
 	{
 		// Display message
+		//TODO delete this after testing
 		std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl;
+		parseMessage(std::string(buf, 0, bytesRecv));
 	}
 
 	// Send message
@@ -152,13 +155,26 @@ void Server::readinput(int clientfd)
 	std::string message = buf;
 
 	std::ostringstream cmd;
-	cmd << "NICK " << nick << "\r\n"
-		<< "USER " << user << " 0 * :" << user << "\r\n"
-		<< "JOIN " << channel << "\r\n"
-		<< "PRIVMSG " << channel << " :" << message << "\r\n";
+	cmd << ":ben JOIN :ch1\r\n"
+		<< ":local 332 ben ch1 :Welcome to the channel!\r\n"
+		<< ":local 353 ben = ch1 :ben\r\n";
+		// << ":Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n";
+		// << "NICK " << nick << "\r\n"
+		// << "USER " << user << " 0 * :" << user << "\r\n"
+		// << "JOIN " << channel << "\r\n"
+		// << "PRIVMSG " << channel << " :" << message << "\r\n";
 	std::string cmd_str = cmd.str();
 
+	// char *join = ":ben@local JOIN :ch1\r\n";
+
+	// char *welcome = ":local 332 ben #ch1 :Welcome to the channel!\r\n";
+
+	// char *userlist = ":local 353 ben = #ch1 :ben\r\n";
+
 	send(clientfd, cmd_str.c_str(), cmd_str.size(), 0);
+	// send(clientfd, join, sizeof(join), 0);
+	// send(clientfd, welcome, sizeof(welcome), 0);
+	// send(clientfd, userlist, sizeof(user), 0);
 	// send(clientfd, buf, bytesRecv + 1, 0);
 	std::cout << "Message: " << message << std::endl;
 }
@@ -167,7 +183,7 @@ void Server::mainLoop()
 {
 	while (1)
 	{
-		switch (poll(this->_polls, 1024, 42000))
+		switch (poll(this->_polls, MAX_USER, TIMEOUT))
 		{
 		case 0:
 			std::cout << "Ping..." << std::endl;
@@ -190,4 +206,35 @@ bool Server::_checkPassword(std::string password)
 	if (password != std::string(SERVER_PASSWORD))
 		return false;
 	return true;
+}
+
+//* Vector[0] ist immer der Command, Vector[1 bis n - 1] optionale Angaben z.B.: Channelnamen,... Vector[n] ist immer Plane Text "Hi, wie geht es dir?"
+std::vector<std::string> Server::parseMessage(std::string input)
+{
+	std::string raw;
+	std::string Text;
+	std::vector<std::string> vec;
+	size_t txt = input.find(':');
+	if (txt != -1)
+	{
+		std::string Text = input.substr(txt);
+		raw =input.substr(0,txt);
+	}
+	vec = _find_str(raw, " ");
+	vec.push_back(Text);
+	return vec;
+}
+
+std::vector<std::string> Server::_find_str(std::string s, std::string del)
+{
+	std::vector<std::string> vec;
+	int end = s.find(del); 
+	while (end != -1)
+	{
+		vec.push_back(s.substr(0, end));
+		s.erase(s.begin(), s.begin() + end + 1);
+		end = s.find(del);
+	}
+	vec.push_back(s.substr(0, end));
+	return vec;
 }
