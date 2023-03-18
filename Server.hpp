@@ -38,9 +38,10 @@ class Server
 		Server(int port, std::string password);
 		~Server();
 
-		int				createServer();
-		int				connectUser();
-		void			readinput(int clientfd);
+		int		createServer();
+		int		connectUser();
+		void	readinput(int clientfd);
+		void	mainLoop();
 };
 
 #endif

@@ -2,12 +2,12 @@
 
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
-	if (_checkPassword(password) == false)
-	{
-		std::cerr << "Wrong Password" << std::endl;
-		return;
-	}
-		
+	// if (_checkPassword(password) == false)
+	// {
+	// 	std::cerr << "Wrong Password" << std::endl;
+	// 	return;
+	// }
+
 	for (int i = 0; i < 1024; i++)
 	{
 		this->_polls[i].fd = -1;
@@ -16,13 +16,12 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 	}
 }
 
-Server::~Server() {
-
+Server::~Server()
+{
 }
 
-
 /* Create a server
-	-difference AF(adress family) and PF(protocol family) PF was intended to 
+	-difference AF(adress family) and PF(protocol family) PF was intended to
 		handle several protocols this never happened so AF is what you should use
 	-difference INET(v4) and INET6(v6) is the size of their address space
 		INET6 improved features:
@@ -32,7 +31,7 @@ Server::~Server() {
 		SOCK_DGRAM socket supports datagrams (connectionless, unreliable messages of a fixed
 		(typically small) maximum length)
 	-SOCK_RAW sockets provide access to internal network protocols and interfaces (only super-user)*/
-int	Server::createServer()
+int Server::createServer()
 {
 	this->_polls[0].fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_polls[0].fd == -1)
@@ -46,17 +45,17 @@ int	Server::createServer()
 		exit(-1);
 	}
 	int opt = 1;
-	setsockopt(this->_polls[0].fd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt)); //ermöglicht reuse of ip Adressen die mit bind gebunden wurden
+	setsockopt(this->_polls[0].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // ermöglicht reuse of ip Adressen die mit bind gebunden wurden
 	sockaddr_in hostin;
-	hostin.sin_family = AF_INET;													//Mögliche IP-Adressen (Aufbau der IP-Adresse) (Adress-family)
-	hostin.sin_addr.s_addr = htonl(INADDR_ANY);									//Eigene IP-Adresse/ Da wo der Server läuft
-	hostin.sin_port = htons(this->_port);												//Port, wodrüber der Server erreichbar ist
+	hostin.sin_family = AF_INET;				// Mögliche IP-Adressen (Aufbau der IP-Adresse) (Adress-family)
+	hostin.sin_addr.s_addr = htonl(INADDR_ANY); // Eigene IP-Adresse/ Da wo der Server läuft
+	hostin.sin_port = htons(this->_port);		// Port, wodrüber der Server erreichbar ist
 	if (bind(this->_polls[0].fd, (sockaddr *)&hostin, sizeof(hostin)) == -1)
 	{
 		std::cerr << "Can't bind to IP/Port!" << std::endl;
 		return (-2);
 	}
-	if (listen(this->_polls[0].fd, 5) == -1)   //The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow.
+	if (listen(this->_polls[0].fd, 5) == -1) // The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow.
 	{
 		std::cerr << "Can't listen!" << std::endl;
 		return (-3);
@@ -111,7 +110,7 @@ int Server::connectUser()
 					close(userSocket);
 				}
 			}
-			//TODO readinput
+			// TODO readinput
 			else // data from an existing connection, recieve it
 			{
 				readinput(this->_polls[i].fd);
@@ -154,9 +153,9 @@ void Server::readinput(int clientfd)
 
 	std::ostringstream cmd;
 	cmd << "NICK " << nick << "\r\n"
-	<< "USER " << user << " 0 * :" << user << "\r\n"
-	<< "JOIN " << channel << "\r\n"
-	<< "PRIVMSG " << channel << " :" << message << "\r\n";
+		<< "USER " << user << " 0 * :" << user << "\r\n"
+		<< "JOIN " << channel << "\r\n"
+		<< "PRIVMSG " << channel << " :" << message << "\r\n";
 	std::string cmd_str = cmd.str();
 
 	send(clientfd, cmd_str.c_str(), cmd_str.size(), 0);
@@ -164,6 +163,25 @@ void Server::readinput(int clientfd)
 	std::cout << "Message: " << message << std::endl;
 }
 
+void Server::mainLoop()
+{
+	while (1)
+	{
+		switch (poll(this->_polls, 1024, 42000))
+		{
+		case 0:
+			std::cout << "Ping..." << std::endl;
+			break;
+		case -1:
+			std::cout << "There is an error" << std::endl;
+			break;
+		default:
+			// std::cout << "begin of the default switch" << std::endl;
+			this->connectUser();
+			break;
+		}
+	}
+}
 
 bool Server::_checkPassword(std::string password)
 {
