@@ -1,0 +1,2 @@
+:Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n
+"from" "command" "to" "message"
