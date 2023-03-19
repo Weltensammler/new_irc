@@ -20,7 +20,8 @@ enum commandEnum
 	PING,
 	LIST,
 	WHO,
-	PART
+	PART,
+	MESSAGE
 };
 
 class Commands

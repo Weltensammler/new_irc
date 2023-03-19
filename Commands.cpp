@@ -16,6 +16,7 @@ Commands::Commands(std::vector<std::string> message) {
 	else if (message[0] == "LIST") {this->_type = LIST;}
 	else if (message[0] == "WHO") {this->_type = WHO;}
 	else if (message[0] == "PART") {this->_type = PART;}
+	else {this->_type = MESSAGE;}
 	this->_message = message;
 	std::cout << "Message is: " << (this->_message[0]) << std::endl;
 	std::cout << "---------------------" << std::endl;
@@ -25,40 +26,57 @@ Commands::~Commands() {}
 
 void	Commands::determineCommand()
 {
+	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
 	{
 		case PASS:
 			this->passCommand();
+			break;
 		case USER:
 			this->userCommand();
+			break;
 		case NICK:
 			this->nickCommand();
+			break;
 		case PONG:
 			this->pongCommand();
+			break;
 		case PRIVMSG:
 			this->privmsgCommand();
+			break;
 		case NOTICE:
 			this->noticeCommand();
+			break;
 		case JOIN:
 			this->joinCommand();
+			break;
 		case OPER:
 			this->operCommand();
+			break;
 		case QUIT:
 			this->quitCommand();
+			break;
 		case KILL:
 			this->killCommand();
+			break;
 		case KICK:
 			this->kickCommand();
+			break;
 		case PING:
 			this->pingCommand();
+			break;
 		case LIST:
 			this->listCommand();
+			break;
 		case WHO:
 			this->whoCommand();
+			break;
 		case PART:
 			this->partCommand();
+			break;
 		default:
 			this->sendMessage();
+			break;
 	};
 	
 }

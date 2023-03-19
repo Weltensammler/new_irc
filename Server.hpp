@@ -35,18 +35,18 @@ class Server
 		Server &operator=(Server const &src);
 
 		bool						_checkPassword(std::string password);
-		std::vector<std::string>	_find_str(std::string s, std::string del);
+		// std::vector<std::string>	_find_str(std::string s, std::string del);
 
 	public:
 		struct pollfd			_polls[MAX_USER];
 		Server(int port, std::string password);
 		~Server();
 
-		int							createServer();
-		int							connectUser();
-		void						readinput(int clientfd);
-		std::vector<std::string>	parseMessage(std::string message);
-		void						mainLoop();
+		int		createServer();
+		int		connectUser();
+		void	readinput(int clientfd);
+		void	parseMessage(std::string message);
+		void	mainLoop();
 
 		
 };
