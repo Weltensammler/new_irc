@@ -1,6 +1,6 @@
 #include "Commands.hpp"
 
-Commands::Commands(Server &server, std::vector<std::string> message) {
+Commands::Commands(std::vector<std::string> message) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -18,20 +18,19 @@ Commands::Commands(Server &server, std::vector<std::string> message) {
 	else if (message[0] == "PART") {this->_type = PART;}
 	else {this->_type = MESSAGE;}
 	this->_message = message;
-	this->_server = server;
 	std::cout << "Message is: " << (this->_message[0]) << std::endl;
 	std::cout << "---------------------" << std::endl;
 }
 
 Commands::~Commands() {}
 
-void	Commands::determineCommand()
+void	Commands::determineCommand(Server &server)
 {
 	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
 	{
 		case PASS:
-			this->passCommand();
+			this->passCommand(server);
 			break;
 		case USER:
 			this->userCommand();
@@ -86,9 +85,15 @@ commandEnum	Commands::gettype() {
 	return (this->_type);
 }
 
-void Commands::passCommand() {
+void Commands::passCommand(Server &server) {
 	std::cout << "Command PASS" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	if (!server.checkPassword(this->_message[1]))
+	{
+		std::cout << "PASS falsch!" << std::endl;
+		return;
+	}
+	std::cout << "PASS richtig!" << std::endl;
 }
 
 void Commands::userCommand() {
