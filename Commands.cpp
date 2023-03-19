@@ -24,7 +24,7 @@ Commands::Commands(std::vector<std::string> message) {
 
 Commands::~Commands() {}
 
-void	Commands::determineCommand(Server &server)
+void	Commands::determineCommand(Server &server, int clientfd)
 {
 	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
