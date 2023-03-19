@@ -118,6 +118,7 @@ void Commands::noticeCommand() {
 void Commands::joinCommand() {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	
 }
 
 void Commands::operCommand() {
