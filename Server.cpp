@@ -203,11 +203,9 @@ void Server::mainLoop()
 	}
 }
 
-bool Server::_checkPassword(std::string password)
+bool Server::checkPassword(std::string password)
 {
-	if (password.length() != std::string(SERVER_PASSWORD).length())
-		return false;
-	if (password != std::string(SERVER_PASSWORD))
+	if (password != this->_password)
 		return false;
 	return true;
 }
@@ -229,7 +227,7 @@ void Server::parseMessage(std::string input)
 		while (stream >> word) {
 			sub_vec.push_back(word);
 		}
-		Commands command(sub_vec);
+		Commands command(*this, sub_vec);
 		command.determineCommand();
 	}
 	
