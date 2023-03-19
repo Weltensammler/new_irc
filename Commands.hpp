@@ -27,6 +27,7 @@ class Commands
 {
 	private:
 		commandEnum	_type;
+		std::vector<std::string> _message;
 
 		void	passCommand();
 		void	userCommand();
@@ -47,7 +48,7 @@ class Commands
 	public:
 		Commands(std::vector<std::string> message);
 		~Commands();
-		void		determineCommand(std::vector<std::string> message);
+		void		determineCommand();
 		commandEnum	gettype();
 };
 

@@ -16,11 +16,14 @@ Commands::Commands(std::vector<std::string> message) {
 	else if (message[0] == "LIST") {this->_type = LIST;}
 	else if (message[0] == "WHO") {this->_type = WHO;}
 	else if (message[0] == "PART") {this->_type = PART;}
+	this->_message = message;
+	std::cout << "Message is: " << (this->_message[0]) << std::endl;
+	std::cout << "---------------------" << std::endl;
 }
 
 Commands::~Commands() {}
 
-void	Commands::determineCommand(std::vector<std::string> message)
+void	Commands::determineCommand()
 {
 	switch (this->gettype())
 	{
@@ -58,4 +61,88 @@ void	Commands::determineCommand(std::vector<std::string> message)
 			this->sendMessage();
 	};
 	
+}
+
+commandEnum	Commands::gettype() {
+	return (this->_type);
+}
+
+void Commands::passCommand() {
+	std::cout << "Command PASS" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::userCommand() {
+	std::cout << "Command USER" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::nickCommand() {
+	std::cout << "Command NICK" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::pongCommand() {
+	std::cout << "Command PONG" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::privmsgCommand() {
+	std::cout << "Command PRIVMSG" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::noticeCommand() {
+	std::cout << "Command NOTICE" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::joinCommand() {
+	std::cout << "Command JOIN" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::operCommand() {
+	std::cout << "Command OPER" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::quitCommand() {
+	std::cout << "Command QUIT" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::killCommand() {
+	std::cout << "Command KILL" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::kickCommand() {
+	std::cout << "Command KICK" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::pingCommand() {
+	std::cout << "Command PING" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::listCommand() {
+	std::cout << "Command LIST" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::whoCommand() {
+	std::cout << "Command WHO" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::partCommand() {
+	std::cout << "Command PART" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::sendMessage() {
+	std::cout << "Command SEND MESSAGE" << std::endl;
+	std::cout << "---------------------" << std::endl;
 }

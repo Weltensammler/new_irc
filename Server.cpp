@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Commands.hpp"
 
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
@@ -145,7 +146,9 @@ void Server::readinput(int clientfd)
 		// Display message
 		//TODO delete this after testing
 		std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl;
-		parseMessage(std::string(buf, 0, bytesRecv));
+		std::cout << "---------------------" << std::endl;
+		Commands command(parseMessage(std::string(buf, 0, bytesRecv)));
+		command.determineCommand();
 	}
 
 	// Send message
