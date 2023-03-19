@@ -17,8 +17,26 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 	}
 }
 
+Server::Server()
+{
+	this->_password = "1234";
+	this->_port = 54000;
+}
+
 Server::~Server()
 {
+}
+
+Server &Server::operator=(Server const &src) {
+	this->_password = src._password;
+	this->_port = src._port;
+	for (int i = 0; i < 1024; i++)
+	{
+		this->_polls[i].fd = src._polls[i].fd;
+		this->_polls[i].events = src._polls[i].events;
+		this->_polls[i].revents = src._polls[i].revents;
+	}
+	return (*this);
 }
 
 /* Create a server
@@ -227,8 +245,8 @@ void Server::parseMessage(std::string input)
 		while (stream >> word) {
 			sub_vec.push_back(word);
 		}
-		Commands command(*this, sub_vec);
-		command.determineCommand();
+		Commands command(sub_vec);
+		command.determineCommand(*this);
 	}
 	
 	// std::string raw;
