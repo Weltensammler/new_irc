@@ -41,7 +41,7 @@ class Server
 		int			createServer();
 		int			connectUser();
 		void		readinput(int clientfd);
-		void		parseMessage(std::string message);
+		void		parseMessage(std::string message, int clientfd);
 		void		mainLoop();
 		bool		checkPassword(std::string password);
 		

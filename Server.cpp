@@ -165,7 +165,7 @@ void Server::readinput(int clientfd)
 		//TODO delete this after testing
 		std::cout << "Received: " << std::endl << std::string(buf, 0, bytesRecv) << std::endl;
 		std::cout << "---------------------" << std::endl;
-		parseMessage(std::string(buf, 0, bytesRecv));
+		parseMessage(std::string(buf, 0, bytesRecv), clientfd);
 		// Commands command(parseMessage(std::string(buf, 0, bytesRecv)));
 		// command.determineCommand();
 	}
@@ -229,7 +229,7 @@ bool Server::checkPassword(std::string password)
 }
 
 //* Vector[0] ist immer der Command, Vector[1 bis n - 1] optionale Angaben z.B.: Channelnamen,... Vector[n] ist immer Plane Text "Hi, wie geht es dir?"
-void Server::parseMessage(std::string input)
+void Server::parseMessage(std::string input, int clientfd)
 {
 	std::vector<std::string> vec;
 	while (input.find('\n') != std::string::npos)
@@ -246,7 +246,7 @@ void Server::parseMessage(std::string input)
 			sub_vec.push_back(word);
 		}
 		Commands command(sub_vec);
-		command.determineCommand(*this);
+		command.determineCommand(*this, clientfd);
 	}
 	
 	// std::string raw;

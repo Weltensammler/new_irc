@@ -49,7 +49,7 @@ class Commands
 	public:
 		Commands(std::vector<std::string> message);
 		~Commands();
-		void		determineCommand(Server &server);
+		void		determineCommand(Server &server, int clientfd);
 		commandEnum	gettype();
 };
 
