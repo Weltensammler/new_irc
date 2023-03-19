@@ -1,6 +1,6 @@
 #include "Commands.hpp"
 
-Commands::Commands(std::vector<std::string> message) {
+Commands::Commands(Server &server, std::vector<std::string> message) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -18,6 +18,7 @@ Commands::Commands(std::vector<std::string> message) {
 	else if (message[0] == "PART") {this->_type = PART;}
 	else {this->_type = MESSAGE;}
 	this->_message = message;
+	this->_server = server;
 	std::cout << "Message is: " << (this->_message[0]) << std::endl;
 	std::cout << "---------------------" << std::endl;
 }

@@ -19,7 +19,6 @@
 
 #define MAX_USER		1024
 #define MAX_BUFFER		4096
-#define SERVER_PASSWORD	"1234"
 #define TIMEOUT			42000
 
 class Server
@@ -29,25 +28,22 @@ class Server
 		int						_port;
 		std::string				_password;
 		
-
-		Server();
-		Server(Server const &src);
-		Server &operator=(Server const &src);
-
-		bool						_checkPassword(std::string password);
 		// std::vector<std::string>	_find_str(std::string s, std::string del);
 
 	public:
 		struct pollfd			_polls[MAX_USER];
+		Server();
 		Server(int port, std::string password);
+		Server(Server const &src);
 		~Server();
+		Server &operator=(Server const &src);
 
-		int		createServer();
-		int		connectUser();
-		void	readinput(int clientfd);
-		void	parseMessage(std::string message);
-		void	mainLoop();
-
+		int			createServer();
+		int			connectUser();
+		void		readinput(int clientfd);
+		void		parseMessage(std::string message);
+		void		mainLoop();
+		bool		checkPassword(std::string password);
 		
 };
 
