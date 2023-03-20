@@ -15,6 +15,7 @@
 #include <vector>
 #include <fcntl.h>
 #include "User.hpp"
+#include "Channel.hpp"
 
 
 #define MAX_USER		1024
