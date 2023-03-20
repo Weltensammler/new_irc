@@ -29,6 +29,7 @@ enum commandEnum
 class Commands
 {
 	private:
+		std::string					_servername;
 		commandEnum					_type;
 		std::vector<std::string>	_message;
 		User						&_user;

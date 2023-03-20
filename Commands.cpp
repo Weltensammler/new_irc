@@ -193,39 +193,39 @@ void Commands::joinCommand(Server &server)
 			// }
 			// return;
 		}
-		// else
-		// {
-		// 	//TODO get channel
-		// 	if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
-		// 	{
-		// 		_user.setChannel(channel);
-		// 		channel->addUser(_user);
-		// 	}
-		// }
-		// sendMessageToChannel(*channel, ":" + _user.getUserInfoString() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+	// 	else
+	// 	{
+	// 		if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
+	// 		{
+	// 			_user.setChannel(channel);
+	// 			channel->addUser(_user);
+	// 		}
+	// 	}
+	// 	sendMessageToChannel(*channel, ":" + _user.getUserInfoString() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
 
-		// std::stringstream names;
-		// std::vector<User *> users = channel->getUsers();
-		// std::vector<User *> operators = channel->getOperators();
-		// names << ":" + _serverName +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
+	// 	std::stringstream names;
+	// 	std::map<std::string, User *> users = channel->getUsers();
+	// 	std::map<std::string, User *> operators = channel->getOperators();
+	// 	//TODO find out servername or how to set it
+	// 	names << ":" + _servername +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
 
-		// for (std::vector<User *>::iterator it = users.begin(); it != users.end(); ++it) {
-		// 	if (channel->isOperator((*it)) || (*it)->isOper()) {
-		// 		names << '@';
-		// 	}
-		// 	names << (*it)->getNickname();
-		// 	if ((it + 1) != users.end())
-		// 		names << ' ';
-		// }
-		// names << "\r\n";
-		// std::string namesString = names.str();
-		// write(_user.getFd(), namesString.c_str(), namesString.length());
+	// 	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
+	// 		if (channel->isOperator((*it)) || (*it)->isOper()) {
+	// 			names << '@';
+	// 		}
+	// 		names << (*it)->getNickname();
+	// 		if ((it + 1) != users.end())
+	// 			names << ' ';
+	// 	}
+	// 	names << "\r\n";
+	// 	std::string namesString = names.str();
+	// 	write(_user.getFd(), namesString.c_str(), namesString.length());
 
-		// std::stringstream endOfNamesList;
-		// endOfNamesList << ":" + _serverName +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
-		// std::string endOfNamesListString = endOfNamesList.str();
-		// write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
-	}
+	// 	std::stringstream endOfNamesList;
+	// 	endOfNamesList << ":" + _serverName +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+	// 	std::string endOfNamesListString = endOfNamesList.str();
+	// 	write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+	// }
 }
 
 void Commands::operCommand() {

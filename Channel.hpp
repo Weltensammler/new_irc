@@ -16,9 +16,11 @@ class Channel
 	public:
 		Channel(std::string channelname);
 		~Channel();
-		std::string	getChannelName();
-		void		addUser(User &newuser);
-		void		setOperator(User &newoperator);
+		std::string						getChannelName();
+		void							addUser(User &newuser);
+		void							setOperator(User &newoperator);
+		std::map<std::string, User*>	getUsers();
+		std::map<std::string, User*>	getOperators();
 };
 
 #endif

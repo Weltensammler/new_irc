@@ -13,3 +13,13 @@ void		Channel::setOperator(User &newoperator)
 {
 	this->_operators.insert(std::make_pair<std::string, User*>(newoperator.getUsername(), &newoperator));
 }
+
+std::map<std::string, User*>	Channel::getUsers()
+{
+	return (_users);
+}
+
+std::map<std::string, User*>	Channel::getOperators()
+{
+	return (_operators);
+}

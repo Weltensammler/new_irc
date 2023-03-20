@@ -19,15 +19,16 @@ class User
 		User();
 		User(int);
 		~User();
-		User			&operator= (const User &other);
-		int				getFd() const;
-		std::string		getUsername() const;
-		void			setUsername(std::string username);
-		std::string		getRealname() const;
-		void			setRealname(std::string realname);
-		std::string		getNickname() const;
-		void			setNickname(std::string nickname);
-		void			setChannel(Channel * channel);
+		User					&operator= (const User &other);
+		int						getFd() const;
+		std::string				getUsername() const;
+		void					setUsername(std::string username);
+		std::string				getRealname() const;
+		void					setRealname(std::string realname);
+		std::string				getNickname() const;
+		void					setNickname(std::string nickname);
+		void					setChannel(Channel * channel);
+		std::vector<Channel*>	getChannels();
 };
 
 #endif

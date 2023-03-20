@@ -48,3 +48,8 @@ void		User::setChannel(Channel * channel)
 {
 	_channels.push_back(channel);
 }
+
+std::vector<Channel*>	getChannels()
+{
+	return (_channels);
+}
