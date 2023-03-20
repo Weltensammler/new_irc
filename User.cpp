@@ -30,6 +30,6 @@ std::string User::getRealname() const {
 	return (this->_realname);
 }
 
-void User::setUsername(std::string realname) {
+void User::setRealname(std::string realname) {
 	this->_realname = realname;
 }
