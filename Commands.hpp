@@ -3,6 +3,8 @@
 
 #include "Server.hpp"
 #include <vector>
+#include "Answers.hpp"
+// #include "Utils.hpp"
 
 enum commandEnum
 {
@@ -49,11 +51,14 @@ class Commands
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
 		bool	checkIfNicknameAlreadyUsed(std::string nickname, Server &server);
+		bool	_allowedCharacter(char c);
+		bool	_validateString(const std::string &string);
 	public:
 		Commands(std::vector<std::string> message, User &user);
 		~Commands();
 		void		determineCommand(Server &server);
 		commandEnum	gettype();
+		void 		sendError(int errorCode, std::string arg);
 		
 };
 

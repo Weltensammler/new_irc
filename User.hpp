@@ -12,6 +12,7 @@ class User
 		std::string				_realname;
 		std::string				_nickname;
 		std::vector<Channel*>	_channels;
+		bool					_operator;
 		int						_fd;
 
 	public:
