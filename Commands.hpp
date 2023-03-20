@@ -33,11 +33,11 @@ class Commands
 
 		void						passCommand(Server &server);
 		void						userCommand();
-		void						nickCommand();
+		void						nickCommand(Server &server);
 		void						pongCommand();
 		void						privmsgCommand();
 		void						noticeCommand();
-		void						joinCommand();
+		void						joinCommand(Server &server);
 		void						operCommand();
 		void						quitCommand();
 		void						killCommand();
@@ -48,11 +48,13 @@ class Commands
 		void						partCommand();
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
+		bool	checkIfNicknameAlreadyUsed(std::string nickname, Server &server);
 	public:
 		Commands(std::vector<std::string> message, User &user);
 		~Commands();
 		void		determineCommand(Server &server);
 		commandEnum	gettype();
+		
 };
 
 #endif

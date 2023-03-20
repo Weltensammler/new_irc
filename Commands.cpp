@@ -37,7 +37,7 @@ void	Commands::determineCommand(Server &server)
 			this->userCommand();
 			break;
 		case NICK:
-			this->nickCommand();
+			this->nickCommand(server);
 			break;
 		case PONG:
 			this->pongCommand();
@@ -49,7 +49,7 @@ void	Commands::determineCommand(Server &server)
 			this->noticeCommand();
 			break;
 		case JOIN:
-			this->joinCommand();
+			this->joinCommand(server);
 			break;
 		case OPER:
 			this->operCommand();
@@ -99,19 +99,32 @@ void Commands::passCommand(Server &server) {
 void Commands::userCommand() {
 	std::cout << "Command USER" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	if (this->_message.size() < 4) {
+	std::size_t messageSize = this->_message.size();
+	if (messageSize < 5) {
 		//return sendError(command, ERR_NEEDMOREPARAMS);
 		std::cout << "Error: ERR_NEEDMOREPARAMS" << std::endl;
+		return;
 	}
+	std::string realname = "";
+	int i = 0;
+	while (messageSize > 4)
+	{
+		realname += this->_message[4 + i++];
+		messageSize--;
+	}
+	this->_user.setRealname(realname);
 	this->_user.setUsername(this->_message[1]);
-	this->_user.setRealname(this->_message[4]);
-	std::cout << "Username: " << this->_message[1] << std::endl;
-	std::cout << "Realname: " << this->_message[4] << std::endl;
 }
 
-void Commands::nickCommand() {
+void Commands::nickCommand(Server &server) {
 	std::cout << "Command NICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	if (this->_message.size() < 2) {
+		//return sendError(command, ERR_NONICKNAMEGIVEN);
+		std::cout << "Error: ERR_NONICKNAMEGIVEN" << std::endl;
+		return;
+	}
+
 }
 
 void Commands::pongCommand() {
@@ -129,68 +142,81 @@ void Commands::noticeCommand() {
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::joinCommand() {
+void Commands::joinCommand(Server &server) {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	// if (this->_message.size() < 2) {
-	// 	std::cout << "No Channel given" << std::cout;
-	// 	// return sendError(command, ERR_NEEDMOREPARAMS);
-	// }
-	// std::string const	&channelName = command.getArgument(0);
-	// //? Not needed?
-	// //? User				&user = command.getUser();
-	// Channel				*channel;
+// 	if (this->_message.size() < 2) {
+// 		std::cout << "No Channel given" << std::endl;
+// 		// return sendError(command, ERR_NEEDMOREPARAMS);
+// 	}
+// 	std::vector<std::string> channels = splitArgs(1);
+// 	for(int i = 0; i < channels.size(); i++)
+// 	{
+// 		// std::string const	&channelName = command.getArgument(0);
+// 		//? Not needed?
+// 		//? User				&user = command.getUser();
+// 		Channel				*channel;
 
-	// if (channelName.at(0) != '#') {
-	// 	sendError(command, 403);
-	// 	return;
-	// }
-	// channel = findChannel(channelName);
-	// if (!channel) {
-	// 	try {
-	// 		//channel does not exist
-	// 		channel = new Channel(channelName);
-	// 		_channels.push_back(channel);
-	// 		user.addChannel(channel);
-	// 		channel->addUser(user);
-	// 		channel->setOper(&user);
-	// 	}
-	// 	catch (FtException &e) {
-	// 		sendError(command, ERR_NOSUCHCHANNEL);
-	// 		return;
-	// 	}
-	// }
-	// else {
-	// 	if (std::find(user.getChannels().begin(), user.getChannels().end(), channel) == user.getChannels().end()) {
-	// 		user.addChannel(channel);
-	// 		channel->addUser(user);
-	// 	}
-	// }
-	// sendMessageToChannel(*channel, ":" + user.getUserInfoString() + " " + "JOIN" + " :" + channel->getName() + "\r\n");
+// 		if (channels[i].at(0) != '#') {
+// 			//sendError(command, 403);
+// 			std::cout << "Wrong channel name!" << std::endl;
+// 			return;
+// 		}
+// 		channel = server.findChannel(channels[i]);
+// 		if (!channel)
+// 		{
+// 			try
+// 			{
+// 				//channel does not exist
+// 				channel = new Channel(channels[i]);
+// 				server.setChannel(channel);
+// 				_user.setChannel(channel);
+// 				//TODO ab hier
+// 				channel->addUser(user);
+// 				channel->setOper(&user);
+// 			}
+// 			catch (FtException &e)
+// 			{
+// 				//sendError(command, ERR_NOSUCHCHANNEL);
+// 				std::cout << "Wrong Channelname!" << std::endl;
+// 			}
+// 				return;
+// 			}
+// 		}
+// 		else
+// 		{
+// 			if (std::find(user.getChannels().begin(), user.getChannels().end(), channel) == user.getChannels().end())
+// 			{
+// 				user.addChannel(channel);
+// 				channel->addUser(user);
+// 			}
+// 		}
+// 		sendMessageToChannel(*channel, ":" + user.getUserInfoString() + " " + "JOIN" + " :" + channel->getName() + "\r\n");
 
-	// std::stringstream names;
-	// std::vector<User *> users = channel->getUsers();
-	// std::vector<User *> operators = channel->getOperators();
-	// names << ":" + _serverName +" 353 " << user.getNick() << " = " << channel->getName() << " :";
+// 		std::stringstream names;
+// 		std::vector<User *> users = channel->getUsers();
+// 		std::vector<User *> operators = channel->getOperators();
+// 		names << ":" + _serverName +" 353 " << user.getNick() << " = " << channel->getName() << " :";
 
-	// for (std::vector<User *>::iterator it = users.begin(); it != users.end(); ++it) {
-	// 	if (channel->isOperator((*it)) || (*it)->isOper()) {
-	// 		names << '@';
-	// 	}
-	// 	names << (*it)->getNick();
-	// 	if ((it + 1) != users.end())
-	// 		names << ' ';
-	// }
-	// names << "\r\n";
-	// std::string namesString = names.str();
-	// write(user.getFd(), namesString.c_str(), namesString.length());
-	// logger.logUserMessage(namesString, user, OUT);
+// 		for (std::vector<User *>::iterator it = users.begin(); it != users.end(); ++it) {
+// 			if (channel->isOperator((*it)) || (*it)->isOper()) {
+// 				names << '@';
+// 			}
+// 			names << (*it)->getNick();
+// 			if ((it + 1) != users.end())
+// 				names << ' ';
+// 		}
+// 		names << "\r\n";
+// 		std::string namesString = names.str();
+// 		write(user.getFd(), namesString.c_str(), namesString.length());
+// 		logger.logUserMessage(namesString, user, OUT);
 
-	// std::stringstream endOfNamesList;
-	// endOfNamesList << ":" + _serverName +" 366 " << user.getNick() << " " << channel->getName() << " :End of /NAMES list.\r\n";
-	// std::string endOfNamesListString = endOfNamesList.str();
-	// write(user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
-	// logger.logUserMessage(endOfNamesListString, user, OUT);
+// 		std::stringstream endOfNamesList;
+// 		endOfNamesList << ":" + _serverName +" 366 " << user.getNick() << " " << channel->getName() << " :End of /NAMES list.\r\n";
+// 		std::string endOfNamesListString = endOfNamesList.str();
+// 		write(user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+// 		logger.logUserMessage(endOfNamesListString, user, OUT);
+// 	}
 }
 
 void Commands::operCommand() {
@@ -254,3 +280,162 @@ std::vector<std::string>	Commands::splitArgs(int i)
 	singleArgs.push_back(args);
 	return (singleArgs);
 }
+
+bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
+{
+	std::map<int, User*>::iterator it;
+	std::map<int, User*> users = server.getUsers();
+	for (it = users.begin(); it != users.end(); it++)
+	{
+		if (it->second->getNickname() == nickname)
+			return (true);
+	}
+	return (false);
+}
+
+// void Commands::sendError(Command const &command, int errorCode)
+// {
+// 	std::string	msg = ":My_IRC ";
+// 	std::stringstream	stream;
+// 	User &user = command.getUser();
+// 	std::string commandName = command.typeToString();
+
+// 	stream << errorCode;
+// 	msg += stream.str() + " " + user.getNick();
+// 	switch (errorCode)
+// 	{
+// 		case ERR_NOSUCHNICK:
+// 			msg += ' ' + command.getArgument(0) + " :No such nick/channel\n";
+// 			break;
+// 		case ERR_NOSUCHSERVER:
+// 			msg += " :No such server\n";
+// 			break;
+// 		case ERR_NOSUCHCHANNEL:
+// 			msg += ' ' + command.getArgument(0) + " :No such channel\n";
+// 			break;
+// 		case ERR_CANNOTSENDTOCHAN:
+// 			msg += " :Cannot send to channel\n";
+// 			break;
+// 		case ERR_TOOMANYCHANNELS:
+// 			msg += " :You have joined too many channels\n";
+// 			break;
+// 		case ERR_WASNOSUCHNICK:
+// 			msg += " :There was no such nickname\n";
+// 			break;
+// 		case ERR_TOOMANYTARGETS:
+// 			msg += " :Duplicate recipients delivered\n";
+// 			break;
+// 		case ERR_NOORIGIN:
+// 			msg += " :No origin specified\n";
+// 			break;
+// 		case ERR_NORECIPIENT:
+// 			msg += " :No recipient given (" + commandName + ")\n";
+// 			break;
+// 		case ERR_NOTEXTTOSEND:
+// 			msg += " :No text to send\n";
+// 			break;
+// 		case ERR_NOTOPLEVEL:
+// 			msg += " " + commandName + " :No toplevel domain specified\n";
+// 			break;
+// 		case ERR_WILDTOPLEVEL:
+// 			msg += " " + commandName + " :Wildcard in toplevel domain\n";
+// 			break;
+// 		case ERR_UNKNOWNCOMMAND:
+// 			msg += " " + commandName + " :Unknown command\n";
+// 			break;
+// 		case ERR_NOMOTD:
+// 			msg += " :MOTD File is missing\n";
+// 			break;
+// 		case ERR_NOADMININFO:
+// 			msg += " " + commandName + " :No administrative info available\n";
+// 			break;
+// 		case ERR_NONICKNAMEGIVEN:
+// 			msg += " :No nickname given\n";
+// 			break;
+// 		case ERR_ERRONEUSNICKNAME:
+// 			msg += " " + command.getArgument(0) + " :Erroneus nickname\n";
+// 			break;
+// 		case ERR_NICKNAMEINUSE:
+// 			msg += " * :Nickname is already in use.\n";
+// 			break;
+// 		case ERR_NICKCOLLISION:
+// 			msg += " " + commandName + " :Nickname collision KILL\n";
+// 			break;
+// 		case ERR_USERNOTINCHANNEL:
+// 			msg += " " + commandName + " :They aren't on that channel\n";
+// 			break;
+// 		case ERR_NOTONCHANNEL:
+// 			msg += " " + commandName + " :You're not on that channel\n";
+// 			break;
+// 		case ERR_USERONCHANNEL:
+// 			msg += " " + commandName + " :is already on channel\n";
+// 			break;
+// 		case ERR_NOLOGIN:
+// 			msg += " " + commandName + " :User not logged in\n";
+// 			break;
+// 		case ERR_SUMMONDISABLED:
+// 			msg += " :SUMMON has been disabled\n";
+// 			break;
+// 		case ERR_USERSDISABLED:
+// 			msg += " :USERS has been disabled\n";
+// 			break;
+// 		case ERR_NOTREGISTERED:
+// 			msg += " :You have not registered\n";
+// 			break;
+// 		case ERR_NEEDMOREPARAMS:
+// 			msg += " " + commandName + " :Not enough parameters\n";
+// 			break;
+// 		case ERR_ALREADYREGISTRED:
+// 			msg += " :You may not reregister\n";
+// 			break;
+// 		case ERR_NOPERMFORHOST:
+// 			msg += " :Your host isn't among the privileged\n";
+// 			break;
+// 		case ERR_PASSWDMISMATCH:
+// 			msg += " :Password incorrect\n";
+// 			break;
+// 		case ERR_YOUREBANNEDCREEP:
+// 			msg += " :You are banned from this server\n";
+// 			break;
+// 		case ERR_KEYSET:
+// 			msg += " " + commandName + " :Channel key already set\n";
+// 			break;
+// 		case ERR_CHANNELISFULL:
+// 			msg += " " + commandName + " :Cannot join channel (+l)\n";
+// 			break;
+// 		case ERR_UNKNOWNMODE:
+// 			msg += " :is unknown mode char to me\n";
+// 			break;
+// 		case ERR_INVITEONLYCHAN:
+// 			msg += " " + commandName + " :Cannot join channel (+i)\n";
+// 			break;
+// 		case ERR_BANNEDFROMCHAN:
+// 			msg += " " + commandName + " :Cannot join channel (+b)\n";
+// 			break;
+// 		case ERR_BADCHANNELKEY:
+// 			msg += " " + commandName + " :Cannot join channel (+k)\n";
+// 			break;
+// 		case ERR_NOPRIVILEGES:
+// 			msg += " :Permission Denied- You do not have the correct IRC Operator privileges\n";
+// 			break;
+// 		case ERR_CHANOPRIVSNEEDED:
+// 			msg += " " + commandName + " :You're not channel operator\n";
+// 			break;
+// 		case ERR_CANTKILLSERVER:
+// 			msg += " :You cant kill a server!\n";
+// 			break;
+// 		case ERR_NOOPERHOST:
+// 			msg += " :No O-lines for your host\n";
+// 			break;
+// 		case ERR_UMODEUNKNOWNFLAG:
+// 			msg += " :Unknown MODE flag\n";
+// 			break;
+// 		case ERR_USERSDONTMATCH:
+// 			msg += " :Cant change mode for other users\n";
+// 			break;
+// 		default:
+// 			msg += "UNKNOWN ERROR\n";
+// 			break;
+// 	}
+// 	write(user.getFd(), msg.c_str(), msg.size());
+// }

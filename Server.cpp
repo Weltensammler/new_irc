@@ -283,3 +283,18 @@ void Server::parseMessage(std::string input, int clientfd)
 // 	vec.push_back(s.substr(0, end));
 // 	return vec;
 // }
+
+std::map<int, User*> Server::getUsers() const
+{
+	return (this->_users);
+}
+
+void	Server::setChannel(Channel *channel)
+{
+	this->_channel.insert(std::make_pair<std::string, Channel*>(channel->getChannelName(), channel));
+}
+
+Channel	*Server::findChannel(std::string channelname)
+{
+	return(this->_channel[channelname]);
+}
