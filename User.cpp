@@ -14,7 +14,7 @@ User &User::operator=(const User &other) {
 	return (*this);
 }
 
-int User::getfd() const {
+int User::getFd() const {
 	return (this->_fd);
 }
 

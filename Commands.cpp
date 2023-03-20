@@ -245,4 +245,5 @@ std::vector<std::string>	Commands::splitArgs(int i)
 		singleArgs.push_back(substring);
 	}
 	singleArgs.push_back(args);
+	return (singleArgs);
 }

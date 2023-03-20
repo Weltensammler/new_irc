@@ -14,7 +14,7 @@ class User
 		User(int);
 		~User();
 		User &operator= (const User &other);
-		int	getfd() const;
+		int	getFd() const;
 		std::string getNick() const;
 		void setNick(std::string nick);
 };

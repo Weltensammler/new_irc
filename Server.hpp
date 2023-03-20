@@ -21,6 +21,8 @@
 #define MAX_BUFFER		4096
 #define TIMEOUT			42000
 
+class User;
+
 class Server
 {
 	private:
