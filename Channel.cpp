@@ -6,7 +6,7 @@ std::string Channel::getChannelName(){ return this->_channelname;}
 
 void		Channel::addUser(User &newuser)
 {
-	this->_user.insert(std::make_pair<std::string, User*>(newuser.getUsername(), &newuser));
+	this->_users.insert(std::make_pair<std::string, User*>(newuser.getUsername(), &newuser));
 }
 
 void		Channel::setOperator(User &newoperator)

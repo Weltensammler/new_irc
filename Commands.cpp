@@ -225,7 +225,7 @@ void Commands::joinCommand(Server &server)
 	// 	endOfNamesList << ":" + _serverName +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 	// 	std::string endOfNamesListString = endOfNamesList.str();
 	// 	write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
-	// }
+	}
 }
 
 void Commands::operCommand() {

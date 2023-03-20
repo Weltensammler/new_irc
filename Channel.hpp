@@ -9,7 +9,7 @@ class Channel
 {
 	private:
 		std::string						_channelname;
-		std::map<std::string, User*>	_user;
+		std::map<std::string, User*>	_users;
 		std::map<std::string, User*>	_operators;
 		Channel();
 
