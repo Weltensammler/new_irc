@@ -6,7 +6,8 @@
 class User
 {
 	private:
-		std::string	_nick;
+		std::string	_username;
+		std::string	_realname;
 		int			_fd;
 
 	public:
@@ -15,8 +16,10 @@ class User
 		~User();
 		User &operator= (const User &other);
 		int	getFd() const;
-		std::string getNick() const;
-		void setNick(std::string nick);
+		std::string getUsername() const;
+		void setUsername(std::string username);
+		std::string getRealname() const;
+		void setRealname(std::string realname);
 };
 
 #endif

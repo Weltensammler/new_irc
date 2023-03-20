@@ -79,7 +79,6 @@ void	Commands::determineCommand(Server &server)
 			this->sendMessage();
 			break;
 	};
-	
 }
 
 commandEnum	Commands::gettype() {
@@ -100,6 +99,12 @@ void Commands::passCommand(Server &server) {
 void Commands::userCommand() {
 	std::cout << "Command USER" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	if (this->_message.size() < 4) {
+		//return sendError(command, ERR_NEEDMOREPARAMS);
+		std::cout << "Error: ERR_NEEDMOREPARAMS" << std::endl;
+	}
+	this->_user.setUsername(this->_message[1]);
+	this->_user.setRealname(this->_message[4]);
 	std::cout << "Username: " << this->_message[1] << std::endl;
 	std::cout << "Realname: " << this->_message[4] << std::endl;
 }
