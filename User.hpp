@@ -6,11 +6,17 @@
 class User
 {
 	private:
-		int	userfd;
+		std::string	_nick;
+		int			_fd;
 
 	public:
 		User();
+		User(int);
 		~User();
+		User &operator= (const User &other);
+		int	getfd() const;
+		std::string getNick() const;
+		void setNick(std::string nick);
 };
 
 #endif

@@ -123,6 +123,8 @@ int Server::connectUser()
 					this->_polls[j].fd = userSocket;
 					this->_polls[j].events = POLLIN; //? do we need this line
 					this->_polls[j].revents = 0;
+					User new_user(userSocket);
+					this->_users.insert(std::make_pair(userSocket, &new_user));
 				}
 				else
 				{
@@ -245,8 +247,8 @@ void Server::parseMessage(std::string input, int clientfd)
 		while (stream >> word) {
 			sub_vec.push_back(word);
 		}
-		Commands command(sub_vec);
-		command.determineCommand(*this, clientfd);
+		Commands command(sub_vec, *(this->_users.find(clientfd)->second));
+		command.determineCommand(*this);
 	}
 	
 	// std::string raw;

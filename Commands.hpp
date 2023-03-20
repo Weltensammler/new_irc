@@ -27,29 +27,31 @@ enum commandEnum
 class Commands
 {
 	private:
-		commandEnum	_type;
-		std::vector<std::string> _message;
+		commandEnum					_type;
+		std::vector<std::string>	_message;
+		User						&_user;
 
-		void	passCommand(Server &server);
-		void	userCommand();
-		void	nickCommand();
-		void	pongCommand();
-		void	privmsgCommand();
-		void	noticeCommand();
-		void	joinCommand();
-		void	operCommand();
-		void	quitCommand();
-		void	killCommand();
-		void	kickCommand();
-		void	pingCommand();
-		void	listCommand();
-		void	whoCommand();
-		void	partCommand();
-		void	sendMessage();
+		void						passCommand(Server &server);
+		void						userCommand();
+		void						nickCommand();
+		void						pongCommand();
+		void						privmsgCommand();
+		void						noticeCommand();
+		void						joinCommand();
+		void						operCommand();
+		void						quitCommand();
+		void						killCommand();
+		void						kickCommand();
+		void						pingCommand();
+		void						listCommand();
+		void						whoCommand();
+		void						partCommand();
+		void						sendMessage();
+		std::vector<std::string>	splitArgs(int i);
 	public:
-		Commands(std::vector<std::string> message);
+		Commands(std::vector<std::string> message, User &user);
 		~Commands();
-		void		determineCommand(Server &server, int clientfd);
+		void		determineCommand(Server &server);
 		commandEnum	gettype();
 };
 

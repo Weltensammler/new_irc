@@ -1,6 +1,7 @@
 #include "Commands.hpp"
+#include "Answers.hpp"
 
-Commands::Commands(std::vector<std::string> message) {
+Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -24,7 +25,7 @@ Commands::Commands(std::vector<std::string> message) {
 
 Commands::~Commands() {}
 
-void	Commands::determineCommand(Server &server, int clientfd)
+void	Commands::determineCommand(Server &server)
 {
 	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
@@ -99,6 +100,8 @@ void Commands::passCommand(Server &server) {
 void Commands::userCommand() {
 	std::cout << "Command USER" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	std::cout << "Username: " << this->_message[1] << std::endl;
+	std::cout << "Realname: " << this->_message[4] << std::endl;
 }
 
 void Commands::nickCommand() {
@@ -124,12 +127,69 @@ void Commands::noticeCommand() {
 void Commands::joinCommand() {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	
+	// if (this->_message.size() < 1) {
+	// 	return sendError(command, ERR_NEEDMOREPARAMS);
+	// }
+	// std::string const	&channelName = command.getArgument(0);
+	// User				&user = command.getUser();
+	// Channel				*channel;
+
+	// if (channelName.at(0) != '#') {
+	// 	sendError(command, 403);
+	// 	return;
+	// }
+	// channel = findChannel(channelName);
+	// if (!channel) {
+	// 	try {
+	// 		//channel does not exist
+	// 		channel = new Channel(channelName);
+	// 		_channels.push_back(channel);
+	// 		user.addChannel(channel);
+	// 		channel->addUser(user);
+	// 		channel->setOper(&user);
+	// 	}
+	// 	catch (FtException &e) {
+	// 		sendError(command, ERR_NOSUCHCHANNEL);
+	// 		return;
+	// 	}
+	// }
+	// else {
+	// 	if (std::find(user.getChannels().begin(), user.getChannels().end(), channel) == user.getChannels().end()) {
+	// 		user.addChannel(channel);
+	// 		channel->addUser(user);
+	// 	}
+	// }
+	// sendMessageToChannel(*channel, ":" + user.getUserInfoString() + " " + "JOIN" + " :" + channel->getName() + "\r\n");
+
+	// std::stringstream names;
+	// std::vector<User *> users = channel->getUsers();
+	// std::vector<User *> operators = channel->getOperators();
+	// names << ":" + _serverName +" 353 " << user.getNick() << " = " << channel->getName() << " :";
+
+	// for (std::vector<User *>::iterator it = users.begin(); it != users.end(); ++it) {
+	// 	if (channel->isOperator((*it)) || (*it)->isOper()) {
+	// 		names << '@';
+	// 	}
+	// 	names << (*it)->getNick();
+	// 	if ((it + 1) != users.end())
+	// 		names << ' ';
+	// }
+	// names << "\r\n";
+	// std::string namesString = names.str();
+	// write(user.getFd(), namesString.c_str(), namesString.length());
+	// logger.logUserMessage(namesString, user, OUT);
+
+	// std::stringstream endOfNamesList;
+	// endOfNamesList << ":" + _serverName +" 366 " << user.getNick() << " " << channel->getName() << " :End of /NAMES list.\r\n";
+	// std::string endOfNamesListString = endOfNamesList.str();
+	// write(user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+	// logger.logUserMessage(endOfNamesListString, user, OUT);
 }
 
 void Commands::operCommand() {
 	std::cout << "Command OPER" << std::endl;
 	std::cout << "---------------------" << std::endl;
+
 }
 
 void Commands::quitCommand() {
@@ -170,4 +230,19 @@ void Commands::partCommand() {
 void Commands::sendMessage() {
 	std::cout << "Command SEND MESSAGE" << std::endl;
 	std::cout << "---------------------" << std::endl;
+}
+
+std::vector<std::string>	Commands::splitArgs(int i)
+{
+	std::vector<std::string>	singleArgs;
+	std::string					args = _message[i];
+
+	while (args.find(',') != std::string::npos)
+	{
+		size_t index = args.find(',');
+		std::string substring = args.substr(0, index);
+		args = args.substr(index + 1, args.length());
+		singleArgs.push_back(substring);
+	}
+	singleArgs.push_back(args);
 }
