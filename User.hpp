@@ -14,6 +14,8 @@ class User
 		std::string				_ip;
 		std::vector<Channel*>	_channels;
 		bool					_operator;
+		bool					_authorized;
+		bool					_passwordSent;
 		int						_fd;
 
 
@@ -34,6 +36,10 @@ class User
 		std::vector<Channel*>	getChannels();
 		bool					isOperator();
 		std::string 			getUserInfo() const;
+		bool					getAuth() const;
+		void					setAuth(bool status);
+		bool					getPasswordSent() const;
+		void					setPasswordSent(bool status);
 };
 
 #endif

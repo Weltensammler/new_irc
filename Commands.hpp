@@ -11,7 +11,6 @@ enum commandEnum
 	PASS,
 	USER,
 	NICK,
-	PONG,
 	PRIVMSG,
 	NOTICE,
 	JOIN,
@@ -19,7 +18,6 @@ enum commandEnum
 	QUIT,
 	KILL,
 	KICK,
-	PING,
 	LIST,
 	WHO,
 	PART,
@@ -39,7 +37,6 @@ class Commands
 		void						passCommand(Server &server);
 		void						userCommand();
 		void						nickCommand(Server &server);
-		void						pongCommand();
 		void						privmsgCommand();
 		void						noticeCommand();
 		void						joinCommand(Server &server);
@@ -47,7 +44,6 @@ class Commands
 		void						quitCommand();
 		void						killCommand();
 		void						kickCommand();
-		void						pingCommand();
 		void						listCommand();
 		void						whoCommand();
 		void						partCommand();
@@ -56,6 +52,7 @@ class Commands
 		bool	checkIfNicknameAlreadyUsed(std::string nickname, Server &server);
 		bool	_allowedCharacter(char c);
 		bool	_validateString(const std::string &string);
+		void	deleteUser(User &user, Server &server);
 	public:
 		Commands(std::vector<std::string> message, User &user);
 		~Commands();

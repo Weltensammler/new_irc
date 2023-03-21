@@ -4,7 +4,6 @@ Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
-	else if (message[0] == "PONG") {this->_type = PONG;}
 	else if (message[0] == "PRIVMSG") {this->_type = PRIVMSG;}
 	else if (message[0] == "NOTICE") {this->_type = NOTICE;}
 	else if (message[0] == "JOIN") {this->_type = JOIN;}
@@ -12,7 +11,6 @@ Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
 	else if (message[0] == "QUIT") {this->_type = QUIT;}
 	else if (message[0] == "KILL") {this->_type = KILL;}
 	else if (message[0] == "KICK") {this->_type = KICK;}
-	else if (message[0] == "PING") {this->_type = PING;}
 	else if (message[0] == "LIST") {this->_type = LIST;}
 	else if (message[0] == "WHO") {this->_type = WHO;}
 	else if (message[0] == "PART") {this->_type = PART;}
@@ -38,9 +36,6 @@ void	Commands::determineCommand(Server &server)
 		case NICK:
 			this->nickCommand(server);
 			break;
-		case PONG:
-			this->pongCommand();
-			break;
 		case PRIVMSG:
 			this->privmsgCommand();
 			break;
@@ -61,9 +56,6 @@ void	Commands::determineCommand(Server &server)
 			break;
 		case KICK:
 			this->kickCommand();
-			break;
-		case PING:
-			this->pingCommand();
 			break;
 		case LIST:
 			this->listCommand();
@@ -87,12 +79,28 @@ commandEnum	Commands::gettype() {
 void Commands::passCommand(Server &server) {
 	std::cout << "Command PASS" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	if (server.getPassword().empty())
+	{
+		std::cout << "PASS leer!" << std::endl;
+		return;
+	}
+	if (this->_message[1].empty())
+	{
+		std::cout << "PASS zu wenig!" << std::endl;
+		sendError(ERR_NEEDMOREPARAMS, "");
+		return;
+	}
 	if (!server.checkPassword(this->_message[1]))
 	{
 		std::cout << "PASS falsch!" << std::endl;
+		sendError(ERR_PASSWDMISMATCH, "");
 		return;
 	}
 	std::cout << "PASS richtig!" << std::endl;
+	std::map<int, User*> users = server.getUsers();
+	User &user = *(users.find(this->_user.getFd())->second);
+	user.setAuth(true);
+	return;
 }
 
 void Commands::userCommand() {
@@ -120,24 +128,19 @@ void Commands::nickCommand(Server &server) {
 	std::cout << "---------------------" << std::endl;
 	if (this->_message.size() < 2) {
 		std::cout << "Error: ERR_NONICKNAMEGIVEN" << std::endl;
-		return sendError(ERR_NONICKNAMEGIVEN, NULL);
+		return sendError(ERR_NONICKNAMEGIVEN, "");
 	}
 	if (this->checkIfNicknameAlreadyUsed(this->_message[1], server))
 	{
 		std::cout << "Error: ERR_NICKNAMEINUSE" << std::endl;
-		return sendError(ERR_NICKNAMEINUSE, NULL);
+		return sendError(ERR_NICKNAMEINUSE, "");
 	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
 		this->_user.setNickname(this->_message[1]);
 	else {
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
-		return sendError(ERR_ERRONEUSNICKNAME, NULL);
+		return sendError(ERR_ERRONEUSNICKNAME, "");
 	}
-}
-
-void Commands::pongCommand() {
-	std::cout << "Command PONG" << std::endl;
-	std::cout << "---------------------" << std::endl;
 }
 
 void Commands::privmsgCommand() {
@@ -249,11 +252,6 @@ void Commands::kickCommand() {
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::pingCommand() {
-	std::cout << "Command PING" << std::endl;
-	std::cout << "---------------------" << std::endl;
-}
-
 void Commands::listCommand() {
 	std::cout << "Command LIST" << std::endl;
 	std::cout << "---------------------" << std::endl;
@@ -302,12 +300,24 @@ bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
 	return (false);
 }
 
+void Commands::deleteUser(User &user, Server &server) {
+	std::map<int, User*>::iterator it;
+	std::map<int, User*> users = server.getUsers();
+	for (it = users.begin(); it != users.end(); ++it) {
+		if ((*it->second).getFd() == user.getFd()) {
+			// removeUserFromAllChannels(user, reason);
+			users.erase(it);
+			server._polls[user.getFd()].fd = -1;
+			break;
+		}
+	}
+}
+
 void Commands::sendError(int errorCode, std::string arg)
 {
 	std::string	msg = ":My_IRC ";
 	std::stringstream	stream;
 	std::string commandName = this->_message[0];
-
 	stream << errorCode;
 	msg += stream.str() + " " + _user.getNickname();
 	switch (errorCode)

@@ -1,9 +1,9 @@
 #include "User.hpp"
 
-User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1) {
+User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false) {
 }
 
-User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd) {
+User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false) {
 }
 
 User::~User(){}
@@ -70,4 +70,19 @@ std::string	User::getUserInfo() const
 
 	info = this->getNickname() + "!" + this->getUsername() + "@" + this->getIp();
 	return info;
+}
+
+bool	User::getAuth() const {
+	return (this->_authorized);
+}
+
+void	User::setAuth(bool status) {
+	this->_authorized = status;
+}
+
+bool	User::getPasswordSent() const{
+	return (this->_passwordSent);
+}
+void	User::setPasswordSent(bool status) {
+	this->_passwordSent = status;
 }
