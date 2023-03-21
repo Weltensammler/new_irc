@@ -98,6 +98,7 @@ int Server::connectUser()
 				memset(host, 0, NI_MAXHOST);
 				memset(service, 0, NI_MAXSERV);
 				int userSocket = accept(this->_polls[0].fd, (sockaddr *)&user, &userSize);
+				std::cout << "user ip " << inet_ntoa(user.sin_addr) << std::endl;
 				if (userSocket == -1)
 				{
 					std::cerr << "Problem with client connecting!" << std::endl;
@@ -173,21 +174,21 @@ void Server::readinput(int clientfd)
 	}
 
 	// Send message
-	std::string nick = "you";
-	std::string user = "you";
-	std::string channel = "#test";
-	std::string message = buf;
+	// std::string nick = "you";
+	// std::string user = "you";
+	// std::string channel = "#test";
+	// std::string message = buf;
 
-	std::ostringstream cmd;
-	cmd << ":ben JOIN :ch1\r\n"
-		<< ":local 332 ben ch1 :Welcome to the channel!\r\n"
-		<< ":local 353 ben = ch1 :ben\r\n";
+	// std::ostringstream cmd;
+	// cmd << ":ben JOIN :ch1\r\n"
+	// 	<< ":local 332 ben ch1 :Welcome to the channel!\r\n"
+	// 	<< ":local 353 ben = ch1 :ben\r\n";
 		// << ":Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n";
 		// << "NICK " << nick << "\r\n"
 		// << "USER " << user << " 0 * :" << user << "\r\n"
 		// << "JOIN " << channel << "\r\n"
 		// << "PRIVMSG " << channel << " :" << message << "\r\n";
-	std::string cmd_str = cmd.str();
+	// std::string cmd_str = cmd.str();
 
 	// char *join = ":ben@local JOIN :ch1\r\n";
 
@@ -195,7 +196,7 @@ void Server::readinput(int clientfd)
 
 	// char *userlist = ":local 353 ben = #ch1 :ben\r\n";
 
-	send(clientfd, cmd_str.c_str(), cmd_str.size(), 0);
+	// send(clientfd, cmd_str.c_str(), cmd_str.size(), 0);
 	// send(clientfd, join, sizeof(join), 0);
 	// send(clientfd, welcome, sizeof(welcome), 0);
 	// send(clientfd, userlist, sizeof(user), 0);

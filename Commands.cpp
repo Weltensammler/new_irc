@@ -166,7 +166,6 @@ void Commands::joinCommand(Server &server)
 		//? Not needed?
 		//? User				&user = command.getUser();
 		Channel				*channel;
-
 		if (channels[i][0] != '#')
 		{
 			//sendError(command, 403);
@@ -467,9 +466,9 @@ bool	Commands::_validateString(const std::string &string)
 void	Commands::sendMessageToChannel(const Channel &channel, std::string string) {
 	std::map<std::string, User *>	users = channel.getUsers();
 
-	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
+	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it)
+	{
 		int fd = it->second->getFd();
 		write(fd, string.c_str(), string.length());
-		// logger.logUserMessage(string, *(*it), OUT);
 	}
 }
