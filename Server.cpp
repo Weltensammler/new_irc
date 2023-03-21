@@ -210,7 +210,7 @@ void Server::mainLoop()
 		switch (poll(this->_polls, MAX_USER, TIMEOUT))
 		{
 		case 0:
-			std::cout << "Ping." << std::endl
+			std::cout << "Ping." << std::endl;
 			break;
 		case -1:
 			std::cout << "There is an error" << std::endl;

@@ -167,7 +167,7 @@ void Commands::joinCommand(Server &server)
 		//? User				&user = command.getUser();
 		Channel				*channel;
 
-		if (channels[i].at(0) != '#')
+		if (channels[i][0] != '#')
 		{
 			//sendError(command, 403);
 			std::cout << "Wrong channel name!" << std::endl;
