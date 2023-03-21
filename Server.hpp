@@ -50,6 +50,7 @@ class Server
 		void		parseMessage(std::string message, int clientfd);
 		void		mainLoop();
 		bool		checkPassword(std::string password);
+		std::string	getPassword() const;
 		void		setChannel(Channel * channel);
 		void		pingUsers();
 		std::string	getServername();

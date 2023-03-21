@@ -210,7 +210,7 @@ void Server::mainLoop()
 		switch (poll(this->_polls, MAX_USER, TIMEOUT))
 		{
 		case 0:
-			std::cout << "Ping." << std::endl;
+			pingUsers();
 			break;
 		case -1:
 			std::cout << "There is an error" << std::endl;
@@ -224,13 +224,15 @@ void Server::mainLoop()
 }
 
 void Server::pingUsers() {
-	// std::time_t now = std::time(NULL);
-	// std::string msg;
-	// for (size_t i = 0; i < this->_users.size(); i++) {
-	// 	User &user = *(this->_users.at(i + 1));
-	// 	msg = "PING " + std::to_string(now) + "\r\n";
-	// 	write(user.getFd(), msg.c_str(), msg.length());
-	// }
+	std::time_t now = std::time(NULL);
+	std::string msg;
+	std::map<int, User*>::iterator it;
+	for (it = this->_users.begin(); it != this->_users.end(); it++)
+	{
+		User &user = *it->second;
+		msg = "PING " + std::to_string(now) + "\r\n";
+		write(user.getFd(), msg.c_str(), msg.length());
+	}
 }
 
 bool Server::checkPassword(std::string password)
@@ -313,3 +315,8 @@ Channel		*Server::findChannel(std::string channelname)
 {
 	return(this->_channel[channelname]);
 }
+
+std::string	Server::getPassword() const {
+	return (this->_password);
+}
+
