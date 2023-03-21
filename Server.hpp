@@ -21,6 +21,7 @@
 #define MAX_USER		1024
 #define MAX_BUFFER		4096
 #define TIMEOUT			42000
+#define SERVERNAME		"OurIRCServer"
 
 class User;
 class Channel;
@@ -28,6 +29,7 @@ class Channel;
 class Server
 {
 	private:
+		std::string							_servername;
 		std::map<int, User*>				_users;
 		int									_port;
 		std::string							_password;
@@ -49,6 +51,8 @@ class Server
 		void		mainLoop();
 		bool		checkPassword(std::string password);
 		void		setChannel(Channel * channel);
+		void		pingUsers();
+		std::string	getServername();
 		Channel		*findChannel(std::string channelname);
 		std::map<int, User*> getUsers() const;
 		

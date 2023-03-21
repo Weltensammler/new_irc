@@ -11,9 +11,11 @@ class User
 		std::string				_username;
 		std::string				_realname;
 		std::string				_nickname;
+		std::string				_ip;
 		std::vector<Channel*>	_channels;
 		bool					_operator;
 		int						_fd;
+
 
 	public:
 		User();
@@ -26,9 +28,12 @@ class User
 		std::string				getRealname() const;
 		void					setRealname(std::string realname);
 		std::string				getNickname() const;
+		std::string				getIp() const;
 		void					setNickname(std::string nickname);
 		void					setChannel(Channel * channel);
 		std::vector<Channel*>	getChannels();
+		bool					isOperator();
+		std::string 			getUserInfo() const;
 };
 
 #endif

@@ -125,13 +125,13 @@ void Commands::nickCommand(Server &server) {
 	if (this->checkIfNicknameAlreadyUsed(this->_message[1], server))
 	{
 		std::cout << "Error: ERR_NICKNAMEINUSE" << std::endl;
-		sendError(ERR_NICKNAMEINUSE, NULL);
+		return sendError(ERR_NICKNAMEINUSE, NULL);
 	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
 		this->_user.setNickname(this->_message[1]);
 	else {
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
-		sendError(ERR_ERRONEUSNICKNAME, NULL);
+		return sendError(ERR_ERRONEUSNICKNAME, NULL);
 	}
 }
 
@@ -193,38 +193,39 @@ void Commands::joinCommand(Server &server)
 			// }
 			// return;
 		}
-	// 	else
-	// 	{
-	// 		if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
-	// 		{
-	// 			_user.setChannel(channel);
-	// 			channel->addUser(_user);
-	// 		}
-	// 	}
-	// 	sendMessageToChannel(*channel, ":" + _user.getUserInfoString() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+		else
+		{
+			if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
+			{
+				_user.setChannel(channel);
+				channel->addUser(_user);
+			}
+		}
+		//TODO send message function
+		sendMessageToChannel(*channel, ":" + _user.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
 
-	// 	std::stringstream names;
-	// 	std::map<std::string, User *> users = channel->getUsers();
-	// 	std::map<std::string, User *> operators = channel->getOperators();
-	// 	//TODO find out servername or how to set it
-	// 	names << ":" + _servername +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
+		std::stringstream names;
+		std::map<std::string, User *> users = channel->getUsers();
+		std::map<std::string, User *> operators = channel->getOperators();
+		names << ":" + server.getServername() +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
 
-	// 	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
-	// 		if (channel->isOperator((*it)) || (*it)->isOper()) {
-	// 			names << '@';
-	// 		}
-	// 		names << (*it)->getNickname();
-	// 		if ((it + 1) != users.end())
-	// 			names << ' ';
-	// 	}
-	// 	names << "\r\n";
-	// 	std::string namesString = names.str();
-	// 	write(_user.getFd(), namesString.c_str(), namesString.length());
+		for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
+			if (channel->isOperator(it->first) || it->second->isOperator()) {
+				names << '@';
+			}
+			names << it->second->getNickname();
+			//TODO find out why this is needed
+			// if ((it + 1) != users.end())
+			// 	names << ' ';
+		}
+		names << "\r\n";
+		std::string namesString = names.str();
+		write(_user.getFd(), namesString.c_str(), namesString.length());
 
-	// 	std::stringstream endOfNamesList;
-	// 	endOfNamesList << ":" + _serverName +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
-	// 	std::string endOfNamesListString = endOfNamesList.str();
-	// 	write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+		std::stringstream endOfNamesList;
+		endOfNamesList << ":" + server.getServername() +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		std::string endOfNamesListString = endOfNamesList.str();
+		write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
 	}
 }
 
@@ -461,4 +462,14 @@ bool	Commands::_validateString(const std::string &string)
 		if (!_allowedCharacter(*it))
 			return false;
 	return true;
+}
+
+void	Commands::sendMessageToChannel(const Channel &channel, std::string string) {
+	std::map<std::string, User *>	users = channel.getUsers();
+
+	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
+		int fd = it->second->getFd();
+		write(fd, string.c_str(), string.length());
+		// logger.logUserMessage(string, *(*it), OUT);
+	}
 }

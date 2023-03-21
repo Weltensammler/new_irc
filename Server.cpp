@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Commands.hpp"
 
-Server::Server(int port, std::string password) : _port(port), _password(password)
+Server::Server(int port, std::string password) : _port(port), _password(password), _servername(SERVERNAME)
 {
 	// if (_checkPassword(password) == false)
 	// {
@@ -210,7 +210,7 @@ void Server::mainLoop()
 		switch (poll(this->_polls, MAX_USER, TIMEOUT))
 		{
 		case 0:
-			std::cout << "Ping..." << std::endl;
+			std::cout << "Ping." << std::endl
 			break;
 		case -1:
 			std::cout << "There is an error" << std::endl;
@@ -221,6 +221,16 @@ void Server::mainLoop()
 			break;
 		}
 	}
+}
+
+void Server::pingUsers() {
+	// std::time_t now = std::time(NULL);
+	// std::string msg;
+	// for (size_t i = 0; i < this->_users.size(); i++) {
+	// 	User &user = *(this->_users.at(i + 1));
+	// 	msg = "PING " + std::to_string(now) + "\r\n";
+	// 	write(user.getFd(), msg.c_str(), msg.length());
+	// }
 }
 
 bool Server::checkPassword(std::string password)
@@ -289,12 +299,17 @@ std::map<int, User*> Server::getUsers() const
 	return (this->_users);
 }
 
-void	Server::setChannel(Channel *channel)
+void		Server::setChannel(Channel *channel)
 {
 	this->_channel.insert(std::make_pair<std::string, Channel*>(channel->getChannelName(), channel));
 }
 
-Channel	*Server::findChannel(std::string channelname)
+std::string	Server::getServername()
+{
+	return (this->_servername);
+}
+
+Channel		*Server::findChannel(std::string channelname)
 {
 	return(this->_channel[channelname]);
 }

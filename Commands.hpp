@@ -26,6 +26,8 @@ enum commandEnum
 	MESSAGE
 };
 
+class User;
+
 class Commands
 {
 	private:
@@ -59,8 +61,8 @@ class Commands
 		~Commands();
 		void		determineCommand(Server &server);
 		commandEnum	gettype();
+		void		sendMessageToChannel(const Channel &channel, std::string string);
 		void 		sendError(int errorCode, std::string arg);
-		
 };
 
 #endif

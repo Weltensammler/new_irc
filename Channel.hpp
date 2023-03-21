@@ -19,8 +19,9 @@ class Channel
 		std::string						getChannelName();
 		void							addUser(User &newuser);
 		void							setOperator(User &newoperator);
-		std::map<std::string, User*>	getUsers();
+		std::map<std::string, User*>	getUsers() const ;
 		std::map<std::string, User*>	getOperators();
+		bool							isOperator(std::string username);
 };
 
 #endif

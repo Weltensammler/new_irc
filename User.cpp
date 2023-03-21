@@ -53,3 +53,21 @@ std::vector<Channel*>	User::getChannels()
 {
 	return (_channels);
 }
+
+std::string	User::getIp() const
+{
+	return (_ip);
+}
+
+bool	User::isOperator()
+{
+	return (_operator);
+}
+
+std::string	User::getUserInfo() const 
+{
+	std::string info;
+
+	info = this->getNickname() + "!" + this->getUsername() + "@" + this->getIp();
+	return info;
+}
