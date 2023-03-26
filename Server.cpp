@@ -261,6 +261,7 @@ void Server::parseMessage(std::string input, int clientfd)
 			sub_vec.push_back(word);
 		}
 		Commands command(sub_vec, *(this->_users.find(clientfd)->second));
+		//* Commands command(sub_vec, _users, *(this->_users.find(clientfd)->second)); Ersetzt alten Constructor
 		command.determineCommand(*this);
 	}
 	

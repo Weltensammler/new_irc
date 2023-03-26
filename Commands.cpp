@@ -1,6 +1,8 @@
 #include "Commands.hpp"
 
-Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
+
+//*Commands::Commands(std::vector<std::string> message, std::map<int, User *> users, User &currUser) : _currUser(currUser), _users(users) {
+Commands::Commands(std::vector<std::string> message, User &user) : _currUser(user) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -97,8 +99,9 @@ void Commands::passCommand(Server &server) {
 		return;
 	}
 	std::cout << "PASS richtig!" << std::endl;
-	std::map<int, User*> users = server.getUsers();
-	User &user = *(users.find(this->_user.getFd())->second);
+	std::map<int, User*> users = server.getUsers(); //*entfällt, da Users auch in Commands einthalten ist
+	User &user = *(users.find(this->_currUser.getFd())->second);
+	//*User &user = *(_users.find(this->_currUser.getFd())->second);
 	user.setAuth(true);
 	return;
 }
@@ -119,8 +122,8 @@ void Commands::userCommand() {
 		realname += this->_message[4 + i++];
 		messageSize--;
 	}
-	this->_user.setRealname(realname);
-	this->_user.setUsername(this->_message[1]);
+	this->_currUser.setRealname(realname);
+	this->_currUser.setUsername(this->_message[1]);
 }
 
 void Commands::nickCommand(Server &server) {
@@ -136,7 +139,7 @@ void Commands::nickCommand(Server &server) {
 		return sendError(ERR_NICKNAMEINUSE, "");
 	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
-		this->_user.setNickname(this->_message[1]);
+		this->_currUser.setNickname(this->_message[1]);
 	else {
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
 		return sendError(ERR_ERRONEUSNICKNAME, "");
@@ -145,6 +148,16 @@ void Commands::nickCommand(Server &server) {
 
 void Commands::privmsgCommand() {
 	std::cout << "Command PRIVMSG" << std::endl;
+	// User		&user = _getUser(_message[1]);
+	// if (_compare(user, *(_users.end()->second)) == true)
+	// {
+	// 	sendPrivatMessage(user, _message[2] + "\r\n");
+	// }
+	// else
+	// {
+	// 	std::cout << "Error: User nicht gefunden!" << std::endl;
+	// 	//*Fehler user nicht gefunden
+	// }
 	std::cout << "---------------------" << std::endl;
 }
 
@@ -183,9 +196,9 @@ void Commands::joinCommand(Server &server)
 				//channel does not exist
 				channel = new Channel(channels[i]);
 				server.setChannel(channel);
-				_user.setChannel(channel);
-				channel->addUser(_user);
-				channel->setOperator(_user);
+				_currUser.setChannel(channel);
+				channel->addUser(_currUser);
+				channel->setOperator(_currUser);
 			// }
 			//TODO exception
 			// catch (FtException &e)
@@ -197,20 +210,20 @@ void Commands::joinCommand(Server &server)
 		}
 		else
 		{
-			if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
+			if (std::find(_currUser.getChannels().begin(), _currUser.getChannels().end(), channel) == _currUser.getChannels().end())
 			{
-				_user.setChannel(channel);
-				channel->addUser(_user);
+				_currUser.setChannel(channel);
+				channel->addUser(_currUser);
 			}
 		}
 		//TODO send message function
-		sendMessageToChannel(*channel, ":" + _user.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+		sendMessageToChannel(*channel, ":" + _currUser.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
 
 		std::stringstream names;
 		std::map<std::string, User *> users = channel->getUsers();
 		std::map<std::string, User *> operators = channel->getOperators();
-		names << ":" + server.getServername() +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
-
+		names << ":" + server.getServername() +" 353 " << _currUser.getNickname() << " = " << channel->getChannelName() << " :";
+		//*353 --> RPL_NAMREPLY
 		for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
 			if (channel->isOperator(it->first) || it->second->isOperator()) {
 				names << '@';
@@ -222,12 +235,13 @@ void Commands::joinCommand(Server &server)
 		}
 		names << "\r\n";
 		std::string namesString = names.str();
-		write(_user.getFd(), namesString.c_str(), namesString.length());
+		write(_currUser.getFd(), namesString.c_str(), namesString.length());
 
 		std::stringstream endOfNamesList;
-		endOfNamesList << ":" + server.getServername() +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		endOfNamesList << ":" + server.getServername() +" 366 " << _currUser.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		//*366 --> RPL_ENDOFNAMES
 		std::string endOfNamesListString = endOfNamesList.str();
-		write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+		write(_currUser.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
 	}
 }
 
@@ -291,7 +305,8 @@ std::vector<std::string>	Commands::splitArgs(int i)
 bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
 {
 	std::map<int, User*>::iterator it;
-	std::map<int, User*> users = server.getUsers();
+	std::map<int, User*> users = server.getUsers(); //*entfällt, da Users auch in Commands einthalten ist
+	//*for (it = _users.begin(); it != users.end(); it++)
 	for (it = users.begin(); it != users.end(); it++)
 	{
 		if (it->second->getNickname() == nickname)
@@ -302,11 +317,14 @@ bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
 
 void Commands::deleteUser(User &user, Server &server) {
 	std::map<int, User*>::iterator it;
-	std::map<int, User*> users = server.getUsers();
-	for (it = users.begin(); it != users.end(); ++it) {
+	std::map<int, User*> users = server.getUsers(); //*entfällt, da Users auch in Commands einthalten ist
+	//*for (it = _users.begin(); it != users.end(); it++)
+	for (it = users.begin(); it != users.end(); ++it) 
+	{
 		if ((*it->second).getFd() == user.getFd()) {
 			// removeUserFromAllChannels(user, reason);
 			users.erase(it);
+			//*_users.erase(it);
 			server._polls[user.getFd()].fd = -1;
 			break;
 		}
@@ -319,7 +337,7 @@ void Commands::sendError(int errorCode, std::string arg)
 	std::stringstream	stream;
 	std::string commandName = this->_message[0];
 	stream << errorCode;
-	msg += stream.str() + " " + _user.getNickname();
+	msg += stream.str() + " " + _currUser.getNickname();
 	switch (errorCode)
 	{
 		case ERR_NOSUCHNICK:
@@ -455,7 +473,7 @@ void Commands::sendError(int errorCode, std::string arg)
 			msg += "UNKNOWN ERROR\n";
 			break;
 	}
-	write(_user.getFd(), msg.c_str(), msg.size());
+	write(_currUser.getFd(), msg.c_str(), msg.size());
 }
 
 bool	Commands::_allowedCharacter(char c)
@@ -473,7 +491,8 @@ bool	Commands::_validateString(const std::string &string)
 	return true;
 }
 
-void	Commands::sendMessageToChannel(const Channel &channel, std::string string) {
+void	Commands::sendMessageToChannel(const Channel &channel, std::string string)
+{
 	std::map<std::string, User *>	users = channel.getUsers();
 
 	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it)
@@ -482,3 +501,42 @@ void	Commands::sendMessageToChannel(const Channel &channel, std::string string) 
 		write(fd, string.c_str(), string.length());
 	}
 }
+
+//*Neue Funktion für private Nachrichten
+// void	Commands::sendPrivatMessage(const User &user, std::string string)
+// {
+// 	int	user_fd = user.getFd();
+// 	std::string final_msg = "*" + user.getNickname() + "* " + string;
+// 	write(user_fd, final_msg.c_str(), final_msg.length());
+//}
+
+//* Neue Funktion, um zu überprüfen, ob String ein User Nickname ist
+// User	&Commands::_getUser(std::string UserNickname)
+// {
+// 	std::map<int, User*>::iterator it = _users.begin();
+// 	for(; it != _users.end(); it++)
+// 	{
+// 		if (it->second->getNickname() == UserNickname)
+// 		{
+// 			return *(it->second);
+// 		}
+// 	}
+// 	return *(_users.end()->second);
+// }
+
+
+//* Neue Funktion, um zwei User-Klassen mit einander vergleichen zu können
+// bool Commands::_compare(User const &user1, User const &user2) const
+// {
+// 	try
+// 	{
+// 		if (user1.getFd() == user2.getFd())
+// 			return true;
+// 		else
+// 			return false;
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		return false;
+// 	}
+// }

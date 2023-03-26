@@ -32,7 +32,8 @@ class Commands
 		std::string					_servername;
 		commandEnum					_type;
 		std::vector<std::string>	_message;
-		User						&_user;
+		User						&_currUser;
+		//*std::map<int, User*>		&_users;
 
 		void						passCommand(Server &server);
 		void						userCommand();
@@ -53,13 +54,17 @@ class Commands
 		bool	_allowedCharacter(char c);
 		bool	_validateString(const std::string &string);
 		void	deleteUser(User &user, Server &server);
+		//*User	&_getUser(std::string UserNickname);//* neue Funktion um zu prüfen, ob eingegebener User existiert
+		//*bool	_compare(User const &user1, User const &user2) const; //* um zwei User-Klassen miteinander vergleichen zu können
 	public:
 		Commands(std::vector<std::string> message, User &user);
+		//*Commands(std::vector<std::string> message, std::map<int, User *> users, User &currUser);
 		~Commands();
 		void		determineCommand(Server &server);
 		commandEnum	gettype();
 		void		sendMessageToChannel(const Channel &channel, std::string string);
-		void 		sendError(int errorCode, std::string arg);
+		//*void		sendPrivatMessage(const User &user, std::string string); //* Neue Funktion für private Nachrichten
+		void		sendError(int errorCode, std::string arg);
 };
 
 #endif
