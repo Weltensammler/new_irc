@@ -260,8 +260,8 @@ void Server::parseMessage(std::string input, int clientfd)
 		while (stream >> word) {
 			sub_vec.push_back(word);
 		}
-		Commands command(sub_vec, *(this->_users.find(clientfd)->second));
-		command.determineCommand(*this);
+		Commands command(sub_vec, *(this->_users.find(clientfd)->second), *this);
+		command.determineCommand();
 	}
 	
 	// std::string raw;
@@ -304,7 +304,9 @@ std::map<int, User*> Server::getUsers() const
 
 void		Server::setChannel(Channel *channel)
 {
-	this->_channel.insert(std::make_pair<std::string, Channel*>(channel->getChannelName(), channel));
+	std::pair<std::string, Channel*> pair = make_pair(channel->getChannelName(), channel);
+	this->_channel.insert(pair);
+	std::cout << "set channel channelname: " << channel->getChannelName() << std::endl;
 }
 
 std::string	Server::getServername()
@@ -314,10 +316,36 @@ std::string	Server::getServername()
 
 Channel		*Server::findChannel(std::string channelname)
 {
-	return(this->_channel[channelname]);
+	// return(this->_channel[channelname]);
+	Channel	*foundchannel;
+	std::map<std::string, Channel*>::iterator it;
+
+	for (it = _channel.begin(); it != _channel.end(); it++)
+	{
+		if (it->second->getChannelName() == channelname)
+			return (foundchannel = it->second);
+	}
+	return (0);
 }
 
 std::string	Server::getPassword() const {
 	return (this->_password);
 }
 
+User	*Server::findUserByNick(std::string nickname){
+	User	*founduser;
+	std::map<int, User*>::iterator it;
+
+	for (it = _users.begin(); it != _users.end(); it++)
+	{
+		if (it->second->getNickname() == nickname)
+			return (founduser = it->second);
+	}
+	return (0);
+}
+
+User	*Server::findUserByFd(int userfd)
+{
+	User	*founduser = _users.find(userfd)->second;
+	return (founduser);
+}

@@ -51,11 +51,13 @@ class Server
 		void		mainLoop();
 		bool		checkPassword(std::string password);
 		std::string	getPassword() const;
-		void		setChannel(Channel * channel);
+		void		setChannel(Channel *channel);
 		void		pingUsers();
 		std::string	getServername();
 		Channel		*findChannel(std::string channelname);
 		std::map<int, User*> getUsers() const;
+		User		*findUserByNick(std::string nickname);
+		User		*findUserByFd(int userfd);
 		
 };
 

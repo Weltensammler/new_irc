@@ -25,21 +25,23 @@ enum commandEnum
 };
 
 class User;
+class Channel;
 
 class Commands
 {
 	private:
 		std::string					_servername;
+		Server						&_server;
 		commandEnum					_type;
 		std::vector<std::string>	_message;
 		User						&_user;
 
-		void						passCommand(Server &server);
+		void						passCommand();
 		void						userCommand();
-		void						nickCommand(Server &server);
+		void						nickCommand();
 		void						privmsgCommand();
 		void						noticeCommand();
-		void						joinCommand(Server &server);
+		void						joinCommand();
 		void						operCommand();
 		void						quitCommand();
 		void						killCommand();
@@ -49,16 +51,17 @@ class Commands
 		void						partCommand();
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
-		bool	checkIfNicknameAlreadyUsed(std::string nickname, Server &server);
+		bool	checkIfNicknameAlreadyUsed(std::string nickname);
 		bool	_allowedCharacter(char c);
 		bool	_validateString(const std::string &string);
-		void	deleteUser(User &user, Server &server);
+		void	deleteUser(User &user);
 	public:
-		Commands(std::vector<std::string> message, User &user);
+		Commands(std::vector<std::string> message, User &user, Server &server);
 		~Commands();
-		void		determineCommand(Server &server);
+		void		determineCommand();
 		commandEnum	gettype();
-		void		sendMessageToChannel(const Channel &channel, std::string string);
+		void		sendMessageToChannel(Channel *channel, std::string string);
+		void		sendMessageToUser(std::string reason);
 		void 		sendError(int errorCode, std::string arg);
 };
 

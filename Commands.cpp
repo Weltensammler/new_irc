@@ -1,6 +1,6 @@
 #include "Commands.hpp"
 
-Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
+Commands::Commands(std::vector<std::string> message, User &user, Server &server) : _user(user), _server(server) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -22,19 +22,19 @@ Commands::Commands(std::vector<std::string> message, User &user) : _user(user) {
 
 Commands::~Commands() {}
 
-void	Commands::determineCommand(Server &server)
+void	Commands::determineCommand()
 {
 	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
 	{
 		case PASS:
-			this->passCommand(server);
+			this->passCommand();
 			break;
 		case USER:
 			this->userCommand();
 			break;
 		case NICK:
-			this->nickCommand(server);
+			this->nickCommand();
 			break;
 		case PRIVMSG:
 			this->privmsgCommand();
@@ -43,7 +43,7 @@ void	Commands::determineCommand(Server &server)
 			this->noticeCommand();
 			break;
 		case JOIN:
-			this->joinCommand(server);
+			this->joinCommand();
 			break;
 		case OPER:
 			this->operCommand();
@@ -76,10 +76,10 @@ commandEnum	Commands::gettype() {
 	return (this->_type);
 }
 
-void Commands::passCommand(Server &server) {
+void Commands::passCommand() {
 	std::cout << "Command PASS" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	if (server.getPassword().empty())
+	if (_server.getPassword().empty())
 	{
 		std::cout << "PASS leer!" << std::endl;
 		return;
@@ -90,14 +90,16 @@ void Commands::passCommand(Server &server) {
 		sendError(ERR_NEEDMOREPARAMS, "");
 		return;
 	}
-	if (!server.checkPassword(this->_message[1]))
+	if (!_server.checkPassword(this->_message[1]))
 	{
 		std::cout << "PASS falsch!" << std::endl;
 		sendError(ERR_PASSWDMISMATCH, "");
 		return;
 	}
 	std::cout << "PASS richtig!" << std::endl;
-	std::map<int, User*> users = server.getUsers();
+	//TODO maybe rewrite so that getUSER is returning already the correct user and not the whole map
+	//TODO next two lines neccesary? because the user is already stored in command.hpp
+	std::map<int, User*> users = _server.getUsers();
 	User &user = *(users.find(this->_user.getFd())->second);
 	user.setAuth(true);
 	return;
@@ -123,14 +125,14 @@ void Commands::userCommand() {
 	this->_user.setUsername(this->_message[1]);
 }
 
-void Commands::nickCommand(Server &server) {
+void Commands::nickCommand() {
 	std::cout << "Command NICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	if (this->_message.size() < 2) {
 		std::cout << "Error: ERR_NONICKNAMEGIVEN" << std::endl;
 		return sendError(ERR_NONICKNAMEGIVEN, "");
 	}
-	if (this->checkIfNicknameAlreadyUsed(this->_message[1], server))
+	if (this->checkIfNicknameAlreadyUsed(this->_message[1]))
 	{
 		std::cout << "Error: ERR_NICKNAMEINUSE" << std::endl;
 		return sendError(ERR_NICKNAMEINUSE, "");
@@ -146,6 +148,25 @@ void Commands::nickCommand(Server &server) {
 void Commands::privmsgCommand() {
 	std::cout << "Command PRIVMSG" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	std::cout << "here we are1" << std::endl;
+	if (this->_message.size() == 1) {
+		return sendError(ERR_NORECIPIENT, "");
+	}
+	if (this->_message.size() < 3) {
+		return sendError(ERR_NOTEXTTOSEND, "");
+	}
+	std::cout << "here we are2" << std::endl;
+
+	std::string	reciverNick = this->_message[1];
+
+	std::cout << "here we are3" << std::endl;
+	if (reciverNick.at(0) == '#') {
+	//TODO findChannel
+		sendMessageToChannel(_server.findChannel(this->_message[1]), this->_message[2]);
+		std::cout << "here we are4" << std::endl;
+	} else {
+		sendMessageToUser("PRIVMSG");
+	}
 }
 
 void Commands::noticeCommand() {
@@ -153,14 +174,13 @@ void Commands::noticeCommand() {
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::joinCommand(Server &server)
+void Commands::joinCommand()
 {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	if (this->_message.size() < 2) 
 	{
-		std::cout << "No Channel given" << std::endl;
-		// return sendError(command, ERR_NEEDMOREPARAMS);
+		return sendError(ERR_NEEDMOREPARAMS, "");
 	}
 	std::vector<std::string> channels = splitArgs(1);
 	for(int i = 0; i < channels.size(); i++)
@@ -175,17 +195,22 @@ void Commands::joinCommand(Server &server)
 			std::cout << "Wrong channel name!" << std::endl;
 			return;
 		}
-		channel = server.findChannel(channels[i]);
+		channel = _server.findChannel(channels[i]);
 		if (!channel)
 		{
 			// try
 			// {
 				//channel does not exist
+				std::cout << "join 204" << std::endl;
 				channel = new Channel(channels[i]);
-				server.setChannel(channel);
+				_server.setChannel(channel);
 				_user.setChannel(channel);
-				channel->addUser(_user);
-				channel->setOperator(_user);
+				std::cout << _user.getUsername() << std::endl;
+				std::cout << "join 208" << std::endl;
+				channel->addUser(_user.getFd());
+				std::cout << "join 210" << std::endl;
+				channel->setOperator(_user.getFd());
+				std::cout << "join 212" << std::endl;
 			// }
 			//TODO exception
 			// catch (FtException &e)
@@ -200,22 +225,23 @@ void Commands::joinCommand(Server &server)
 			if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
 			{
 				_user.setChannel(channel);
-				channel->addUser(_user);
+				channel->addUser(_user.getFd());
 			}
 		}
-		//TODO send message function
-		sendMessageToChannel(*channel, ":" + _user.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+		std::cout << "join 228" << std::endl;
+		sendMessageToChannel(channel, ":" + _user.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
 
+		std::cout << "join 231" << std::endl;
 		std::stringstream names;
-		std::map<std::string, User *> users = channel->getUsers();
-		std::map<std::string, User *> operators = channel->getOperators();
-		names << ":" + server.getServername() +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
+		std::vector<int> users = channel->getUsers();
+		std::vector<int> operators = channel->getOperators();
+		names << ":" + _server.getServername() +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
 
-		for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it) {
-			if (channel->isOperator(it->first) || it->second->isOperator()) {
+		for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it) {
+			if (channel->isOperator(*it) || _server.findUserByFd(*it)->isOperator()) {
 				names << '@';
 			}
-			names << it->second->getNickname();
+			names << _server.findUserByFd(*it)->getNickname();
 			//TODO find out why this is needed
 			// if ((it + 1) != users.end())
 			// 	names << ' ';
@@ -225,7 +251,7 @@ void Commands::joinCommand(Server &server)
 		write(_user.getFd(), namesString.c_str(), namesString.length());
 
 		std::stringstream endOfNamesList;
-		endOfNamesList << ":" + server.getServername() +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		endOfNamesList << ":" + _server.getServername() +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 		std::string endOfNamesListString = endOfNamesList.str();
 		write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
 	}
@@ -288,10 +314,10 @@ std::vector<std::string>	Commands::splitArgs(int i)
 	return (singleArgs);
 }
 
-bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
+bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname)
 {
 	std::map<int, User*>::iterator it;
-	std::map<int, User*> users = server.getUsers();
+	std::map<int, User*> users = _server.getUsers();
 	for (it = users.begin(); it != users.end(); it++)
 	{
 		if (it->second->getNickname() == nickname)
@@ -300,14 +326,14 @@ bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname, Server &server)
 	return (false);
 }
 
-void Commands::deleteUser(User &user, Server &server) {
+void Commands::deleteUser(User &user) {
 	std::map<int, User*>::iterator it;
-	std::map<int, User*> users = server.getUsers();
+	std::map<int, User*> users = _server.getUsers();
 	for (it = users.begin(); it != users.end(); ++it) {
 		if ((*it->second).getFd() == user.getFd()) {
 			// removeUserFromAllChannels(user, reason);
 			users.erase(it);
-			server._polls[user.getFd()].fd = -1;
+			_server._polls[user.getFd()].fd = -1;
 			break;
 		}
 	}
@@ -315,7 +341,7 @@ void Commands::deleteUser(User &user, Server &server) {
 
 void Commands::sendError(int errorCode, std::string arg)
 {
-	std::string	msg = ":My_IRC ";
+	std::string	msg = ":OurIRCServer ";
 	std::stringstream	stream;
 	std::string commandName = this->_message[0];
 	stream << errorCode;
@@ -473,12 +499,51 @@ bool	Commands::_validateString(const std::string &string)
 	return true;
 }
 
-void	Commands::sendMessageToChannel(const Channel &channel, std::string string) {
-	std::map<std::string, User *>	users = channel.getUsers();
+void	Commands::sendMessageToChannel(Channel *channel, std::string string) {
+	std::cout << "maybe here" << std::endl;
+	std::cout << _server.findChannel("#ch1")->getChannelName() << std::endl;
+	std::cout << "maybe here6" << std::endl;
+	std::vector<int>	users = channel->getUsers();
 
-	for (std::map<std::string, User *>::iterator it = users.begin(); it != users.end(); ++it)
+	std::cout << "maybe here1" << std::endl;
+	for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it)
 	{
-		int fd = it->second->getFd();
+		int fd = *it;
+		std::cout << "maybe here2" << std::endl;
 		write(fd, string.c_str(), string.length());
+		std::cout << "maybe here3" << std::endl;
+	}
+}
+
+void Commands::sendMessageToUser(std::string reason)
+{
+	if (this->_message.size() == 1) {
+		return sendError(ERR_NORECIPIENT, "");
+	}
+	if (this->_message.size() < 3) {
+		return sendError(ERR_NOTEXTTOSEND, "");
+	}
+
+	std::stringstream	logStream;
+	std::string			reciverNick = this->_message[1];
+	std::string			message = this->_message[2];
+	User				*reciver = 0;
+
+
+	// if (toLowercase(reciverNick) == toLowercase(_botName)) {
+	// 	handleBotMessage(command);
+	// 	return;
+	// }
+	reciver = _server.findUserByNick(reciverNick);
+	if (reciver) {
+		std::stringstream toSend;
+		toSend << ':' + reciver->getUserInfo() << " " <<
+		reason << " " << reciverNick << " :" << message << "\r\n";
+		std::string str = toSend.str();
+		write(reciver->getFd(), str.c_str(), str.size());
+		// logger.logUserMessage(str, *reciver, OUT);
+	}
+	else {
+		this->sendError(ERR_NOSUCHNICK, "");
 	}
 }
