@@ -319,3 +319,12 @@ std::map<int, User*>::iterator	Server::getItEnd()
 {
 	return _users.end();
 }
+
+void Server::printchannels()
+{
+	// std::cout << "--------------------------" <<std::endl;
+	// std::cout << "Show all channels:" << std::endl;
+	// for(std::map<std::string, Channel *>::iterator it = _channel.begin(); it != _channel.end(); it++)
+	// 	std::cout <<"Channel: " << it->first << std::endl;
+	// std::cout << "--------------------------" <<std::endl;
+}

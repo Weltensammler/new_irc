@@ -11,13 +11,16 @@ std::string Channel::getChannelName(){ return this->_channelname;}
 
 void	Channel::addUser(int userfd)
 {
-	std::cout << "AddUser FD:" << userfd << std::endl;
+	//std::cout << "########################################AddUser FD:" << userfd << std::endl;
 	for (std::vector<int>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
 		if (*it == userfd)
+		{
+			//std::cout << "User schon vorhanden: " << *it<< std::endl;
 			return ;
+		}
 	}
-	std::cout <<"User wird hinzugefügt fd:" << userfd << std::endl;
+	//std::cout << "vector size: " << _users.size() << std::endl;
 	this->_users.push_back(userfd);
 }
 
@@ -28,7 +31,7 @@ void	Channel::setOperator(int operatorfd)
 		if (*it == operatorfd)
 			return ;
 	}
-	this->_users.push_back(operatorfd);
+	this->_operators.push_back(operatorfd);
 }
 
 std::vector<int>	Channel::getUsers() const

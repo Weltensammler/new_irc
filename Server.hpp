@@ -44,23 +44,24 @@ class Server
 		~Server();
 		Server &operator=(Server const &src);
 
-		int			createServer();
-		int			connectUser();
-		void		readinput(int clientfd);
-		void		parseMessage(std::string message, int clientfd);
-		void		mainLoop();
-		bool		checkPassword(std::string password);
-		std::string	getPassword() const;
-		void		setChannel(Channel *channel);
-		void		pingUsers();
-		std::string	getServername();
-		Channel		*findChannel(std::string channelname);
-		std::map<int, User*> getUsers() const;
-		User		*findUserByNick(std::string nickname);
-		User		*findUserByFd(int userfd);
-		void		printusers();
-		std::map<int, User*>::iterator	getItBegin();
-		std::map<int, User*>::iterator	getItEnd();
+		int									createServer();
+		int									connectUser();
+		void								readinput(int clientfd);
+		void								parseMessage(std::string message, int clientfd);
+		void								mainLoop();
+		bool								checkPassword(std::string password);
+		std::string							getPassword() const;
+		void								setChannel(Channel *channel);
+		void								pingUsers();
+		std::string							getServername();
+		Channel								*findChannel(std::string channelname);
+		std::map<int, User*>				getUsers() const;
+		User								*findUserByNick(std::string nickname);
+		User								*findUserByFd(int userfd);
+		void								printusers();
+		void								printchannels();
+		std::map<int, User*>::iterator		getItBegin();
+		std::map<int, User*>::iterator		getItEnd();
 };
 
 #endif

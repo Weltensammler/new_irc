@@ -163,7 +163,9 @@ void Commands::privmsgCommand() {
 	std::string	reciverNick = this->_message[1];
 	if (reciverNick.at(0) == '#')
 	{
-		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" + this->_server.findUserByFd(_userfd)->getNickname() + " " + "PRIVMSG" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n");
+		std::cout << "PRIVMSG#########" << std::endl;
+		//_server.printchannels();
+		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" + this->_server.findUserByFd(_userfd)->getNickname() + " " + "PRIVMSG" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
 	}
 	else
 	{
@@ -184,29 +186,30 @@ void Commands::joinCommand()
 	{
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	}
-	std::vector<std::string> channels = splitArgs(1);
-	for(int i = 0; i < channels.size(); i++)
+	std::vector<std::string> newchannels = splitArgs(1);
+	for(int i = 0; i < newchannels.size(); i++)
 	{
 		// std::string const	&channelName = command.getArgument(0);
 		//? Not needed?
 		//? User				&user = command.getUser();
 		Channel				*channel;
-		if (channels[i][0] != '#')
+		if (newchannels[i][0] != '#')
 		{
 			//sendError(command, 403);
 			std::cout << "Wrong channel name!" << std::endl;
 			return;
 		}
-		channel = _server.findChannel(channels[i]);
+		channel = _server.findChannel(newchannels[i]);
 		if (!channel)
 		{
 			// try
 			// {
 				//channel does not exist
-				channel = new Channel(channels[i]);
+				channel = new Channel(newchannels[i]);
 				_server.setChannel(channel);
 				_server.findUserByFd(_userfd)->setChannel(channel);
 				std::cout << "user join 207: "<< this->_server.findUserByFd(_userfd)->getUsername() << " user fd: " << _userfd << std::endl;
+				std::cout << "Adduser to Channel Join 1 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
 				channel->setOperator(_userfd);
 			// }
@@ -223,23 +226,27 @@ void Commands::joinCommand()
 			if (std::find(this->_server.findUserByFd(_userfd)->getChannels().begin(), this->_server.findUserByFd(_userfd)->getChannels().end(), channel) == _server.findUserByFd(_userfd)->getChannels().end())
 			{
 				this->_server.findUserByFd(_userfd)->setChannel(channel);
+				//std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
 			}
 		}
-		sendMessageToChannel(channel, ":" + this->_server.findUserByFd(_userfd)->getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+		std::cout << "JOIN" << std::endl;
+		//_server.printchannels();
+		sendMessageToChannel(channel, ":" + this->_server.findUserByFd(_userfd)->getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n", true);
 
 		std::stringstream names;
 		std::vector<int> users = channel->getUsers();
 		std::vector<int> operators = channel->getOperators();
 		names << ":" + _server.getServername() +" 353 " << _server.findUserByFd(_userfd)->getNickname() << " = " << channel->getChannelName() << " :";
-		std::map<int, User*>::iterator it = this->_server.getItBegin();
-		std::map<int, User*>::iterator end = this->_server.getItEnd();
+		std::vector<int>::iterator it = users.begin();
+		std::vector<int>::iterator end = users.end();
 		for (; it != end; it++)
 		{
-			if (channel->isOperator(it->first) || _server.findUserByFd(it->first)->isOperator()) {
+			if (channel->isOperator(*it) || _server.findUserByFd(*it)->isOperator())
+			{
 				names << '@';
 			}
-			names << _server.findUserByFd(it->first)->getNickname();
+			names << _server.findUserByFd(*it)->getNickname();
 			names << ' ';
 		}
 		names << "\r\n";
@@ -497,16 +504,23 @@ bool	Commands::_validateString(const std::string &string)
 	return true;
 }
 
-void	Commands::sendMessageToChannel(Channel *channel, std::string string) {
+void	Commands::sendMessageToChannel(Channel *channel, std::string string, bool self)
+{
 	std::vector<int>	users = channel->getUsers();
 
-	for (std::vector<int>::iterator it = users.begin(); it != users.end(); it++)
+	for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it)
 	{
-		int fd = *it;
-		write(fd, string.c_str(), string.length());
-		std::cout << "fd = " << fd << std::endl;
-		write(1, string.c_str(), string.length());
-		std::cout <<std::endl;
+		std::cout << "it == " << *it << " | self == " << self << std::endl;
+		if (*it != _userfd || self == true)
+		{
+			int fd = *it;
+			write(fd, string.c_str(), string.length());
+			// std::cout << "fd = " << fd << std::endl << "vector size users = " << users.size() << std::endl << "vector size channel users = " << channel->getUsers().size() << std::endl;
+			write(1, string.c_str(), string.length());
+			std::cout <<std::endl;
+		}
+		else
+			std::cout << "WIRD NICHT GESENDET User fd == " << *it << std::endl;
 	}
 }
 

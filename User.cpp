@@ -1,14 +1,13 @@
 #include "User.hpp"
 
-User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false) {
-}
+User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false) {}
 
-User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false) {
-}
+User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false) {}
 
 User::~User(){}
 
-User		&User::operator=(const User &other) {
+User		&User::operator=(const User &other)
+{
 	this->_fd = other.getFd();
 	this->_realname = other.getRealname();
 	this->_username = other.getUsername();
@@ -16,36 +15,48 @@ User		&User::operator=(const User &other) {
 	return (*this);
 }
 
-int			User::getFd() const {
+int			User::getFd() const
+{
 	return (this->_fd);
 }
 
-std::string	User::getUsername() const {
+std::string	User::getUsername() const
+{
 	return (this->_username);
 }
 
-void		User::setUsername(std::string username) {
+void		User::setUsername(std::string username)
+{
 	this->_username = username;
 }
 
-std::string	User::getRealname() const {
+std::string	User::getRealname() const
+{
 	return (this->_realname);
 }
 
-void		User::setRealname(std::string realname) {
+void		User::setRealname(std::string realname)
+{
 	this->_realname = realname;
 }
 
-std::string	User::getNickname() const {
+std::string	User::getNickname() const
+{
 	return (this->_nickname);
 }
 
-void		User::setNickname(std::string nickname) {
+void		User::setNickname(std::string nickname)
+{
 	this->_nickname = nickname;
 }
 
 void		User::setChannel(Channel * channel)
 {
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++)
+	{
+		if (*it == channel)
+			return ;
+	}
 	_channels.push_back(channel);
 }
 
@@ -72,17 +83,21 @@ std::string	User::getUserInfo() const
 	return info;
 }
 
-bool	User::getAuth() const {
+bool	User::getAuth() const
+{
 	return (this->_authorized);
 }
 
-void	User::setAuth(bool status) {
+void	User::setAuth(bool status)
+{
 	this->_authorized = status;
 }
 
-bool	User::getPasswordSent() const{
+bool	User::getPasswordSent() const
+{
 	return (this->_passwordSent);
 }
-void	User::setPasswordSent(bool status) {
+void	User::setPasswordSent(bool status)
+{
 	this->_passwordSent = status;
 }

@@ -51,16 +51,16 @@ class Commands
 		void						partCommand();
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
-		bool	checkIfNicknameAlreadyUsed(std::string nickname);
-		bool	_allowedCharacter(char c);
-		bool	_validateString(const std::string &string);
-		void	deleteUser(User &user);
+		bool						checkIfNicknameAlreadyUsed(std::string nickname);
+		bool						_allowedCharacter(char c);
+		bool						_validateString(const std::string &string);
+		void						deleteUser(User &user);
 	public:
 		Commands(std::vector<std::string> message, int userfd, Server &server);
 		~Commands();
 		void		determineCommand();
 		commandEnum	gettype();
-		void		sendMessageToChannel(Channel *channel, std::string string);
+		void		sendMessageToChannel(Channel *channel, std::string string, bool self);
 		void		sendMessageToUser(std::string reason);
 		void 		sendError(int errorCode, std::string arg);
 };
