@@ -1,6 +1,6 @@
 #include "Commands.hpp"
 
-Commands::Commands(std::vector<std::string> message, User &user, Server &server) : _user(user), _server(server) {
+Commands::Commands(std::vector<std::string> message, int userfd, Server &server) : _userfd(userfd), _server(server) {
 	if (message[0] == "PASS") {this->_type = PASS;}
 	else if (message[0] == "USER") {this->_type = USER;}
 	else if (message[0] == "NICK") {this->_type = NICK;}
@@ -76,7 +76,8 @@ commandEnum	Commands::gettype() {
 	return (this->_type);
 }
 
-void Commands::passCommand() {
+void Commands::passCommand()
+{
 	std::cout << "Command PASS" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	if (_server.getPassword().empty())
@@ -99,9 +100,10 @@ void Commands::passCommand() {
 	std::cout << "PASS richtig!" << std::endl;
 	//TODO maybe rewrite so that getUSER is returning already the correct user and not the whole map
 	//TODO next two lines neccesary? because the user is already stored in command.hpp
-	std::map<int, User*> users = _server.getUsers();
-	User &user = *(users.find(this->_user.getFd())->second);
-	user.setAuth(true);
+	// std::map<int, User*> users = _server.getUsers();
+	// User &user = *(users.find(this->ser.getFd())->second);
+	// std::cout << "Server.getUser() 104: " << _user.getFd() << std::endl;
+	this->_server.findUserByFd(_userfd)->setAuth(true);
 	return;
 }
 
@@ -121,8 +123,8 @@ void Commands::userCommand() {
 		realname += this->_message[4 + i++];
 		messageSize--;
 	}
-	this->_user.setRealname(realname);
-	this->_user.setUsername(this->_message[1]);
+	this->_server.findUserByFd(_userfd)->setRealname(realname);
+	this->_server.findUserByFd(_userfd)->setUsername(this->_message[1]);
 }
 
 void Commands::nickCommand() {
@@ -138,7 +140,16 @@ void Commands::nickCommand() {
 		return sendError(ERR_NICKNAMEINUSE, "");
 	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
-		this->_user.setNickname(this->_message[1]);
+	{
+		std::cout << "SetNickename "<< _message[1] << std::endl;
+		std::cout << "---------------------" << std::endl;
+		_server.printusers();
+		this->_server.findUserByFd(_userfd)->setNickname(this->_message[1]);
+		std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
+		std::cout << "Nach set Nickname " << std::endl;
+		std::cout << "---------NICK------------" << std::endl;
+		_server.printusers();
+	}
 	else {
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
 		return sendError(ERR_ERRONEUSNICKNAME, "");
@@ -201,16 +212,12 @@ void Commands::joinCommand()
 			// try
 			// {
 				//channel does not exist
-				std::cout << "join 204" << std::endl;
 				channel = new Channel(channels[i]);
 				_server.setChannel(channel);
-				_user.setChannel(channel);
-				std::cout << _user.getUsername() << std::endl;
-				std::cout << "join 208" << std::endl;
-				channel->addUser(_user.getFd());
-				std::cout << "join 210" << std::endl;
-				channel->setOperator(_user.getFd());
-				std::cout << "join 212" << std::endl;
+				_server.findUserByFd(_userfd)->setChannel(channel);
+				std::cout << "user join 207: "<< this->_server.findUserByFd(_userfd)->getUsername() << " user fd: " << _userfd << std::endl;
+				channel->addUser(_userfd);
+				channel->setOperator(_userfd);
 			// }
 			//TODO exception
 			// catch (FtException &e)
@@ -222,38 +229,38 @@ void Commands::joinCommand()
 		}
 		else
 		{
-			if (std::find(_user.getChannels().begin(), _user.getChannels().end(), channel) == _user.getChannels().end())
+			if (std::find(this->_server.findUserByFd(_userfd)->getChannels().begin(), this->_server.findUserByFd(_userfd)->getChannels().end(), channel) == _server.findUserByFd(_userfd)->getChannels().end())
 			{
-				_user.setChannel(channel);
-				channel->addUser(_user.getFd());
+				this->_server.findUserByFd(_userfd)->setChannel(channel);
+				channel->addUser(_userfd);
 			}
 		}
-		std::cout << "join 228" << std::endl;
-		sendMessageToChannel(channel, ":" + _user.getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
+		sendMessageToChannel(channel, ":" + this->_server.findUserByFd(_userfd)->getUserInfo() + " " + "JOIN" + " :" + channel->getChannelName() + "\r\n");
 
-		std::cout << "join 231" << std::endl;
 		std::stringstream names;
 		std::vector<int> users = channel->getUsers();
 		std::vector<int> operators = channel->getOperators();
-		names << ":" + _server.getServername() +" 353 " << _user.getNickname() << " = " << channel->getChannelName() << " :";
-
-		for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it) {
-			if (channel->isOperator(*it) || _server.findUserByFd(*it)->isOperator()) {
+		names << ":" + _server.getServername() +" 353 " << _server.findUserByFd(_userfd)->getNickname() << " = " << channel->getChannelName() << " :";
+		std::map<int, User*>::iterator it = this->_server.getItBegin();
+		std::map<int, User*>::iterator end = this->_server.getItEnd();
+		for (; it != end; it++)
+		{
+			if (channel->isOperator(it->first) || _server.findUserByFd(it->first)->isOperator()) {
 				names << '@';
 			}
-			names << _server.findUserByFd(*it)->getNickname();
-			//TODO find out why this is needed
-			// if ((it + 1) != users.end())
-			// 	names << ' ';
+			names << _server.findUserByFd(it->first)->getNickname();
+			names << ' ';
 		}
 		names << "\r\n";
 		std::string namesString = names.str();
-		write(_user.getFd(), namesString.c_str(), namesString.length());
+		write(_userfd, namesString.c_str(), namesString.length());
+		write(1, namesString.c_str(), namesString.length());
 
 		std::stringstream endOfNamesList;
-		endOfNamesList << ":" + _server.getServername() +" 366 " << _user.getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 		std::string endOfNamesListString = endOfNamesList.str();
-		write(_user.getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+		write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
+		write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
 	}
 }
 
@@ -345,7 +352,7 @@ void Commands::sendError(int errorCode, std::string arg)
 	std::stringstream	stream;
 	std::string commandName = this->_message[0];
 	stream << errorCode;
-	msg += stream.str() + " " + _user.getNickname();
+	msg += stream.str() + " " + _server.findUserByFd(_userfd)->getNickname();
 	switch (errorCode)
 	{
 		case ERR_NOSUCHNICK:
@@ -481,7 +488,7 @@ void Commands::sendError(int errorCode, std::string arg)
 			msg += "UNKNOWN ERROR\n";
 			break;
 	}
-	write(_user.getFd(), msg.c_str(), msg.size());
+	write(_userfd, msg.c_str(), msg.size());
 }
 
 bool	Commands::_allowedCharacter(char c)
@@ -500,18 +507,15 @@ bool	Commands::_validateString(const std::string &string)
 }
 
 void	Commands::sendMessageToChannel(Channel *channel, std::string string) {
-	std::cout << "maybe here" << std::endl;
-	std::cout << _server.findChannel("#ch1")->getChannelName() << std::endl;
-	std::cout << "maybe here6" << std::endl;
 	std::vector<int>	users = channel->getUsers();
 
-	std::cout << "maybe here1" << std::endl;
-	for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it)
+	for (std::vector<int>::iterator it = users.begin(); it != users.end(); it++)
 	{
 		int fd = *it;
-		std::cout << "maybe here2" << std::endl;
 		write(fd, string.c_str(), string.length());
-		std::cout << "maybe here3" << std::endl;
+		std::cout << "fd = " << fd << std::endl;
+		write(1, string.c_str(), string.length());
+		std::cout <<std::endl;
 	}
 }
 

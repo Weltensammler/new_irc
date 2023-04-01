@@ -124,8 +124,8 @@ int Server::connectUser()
 					this->_polls[j].fd = userSocket;
 					this->_polls[j].events = POLLIN; //? do we need this line
 					this->_polls[j].revents = 0;
-					User new_user(userSocket);
-					this->_users.insert(std::make_pair(userSocket, &new_user));
+					User* new_user = new User(userSocket);
+					this->_users.insert(std::make_pair(userSocket, new_user));
 				}
 				else
 				{
@@ -166,7 +166,7 @@ void Server::readinput(int clientfd)
 	{
 		// Display message
 		//TODO delete this after testing
-		std::cout << "Received: " << std::endl << std::string(buf, 0, bytesRecv) << std::endl;
+		std::cout << "Received: " << std::endl << std::string(buf, 0, bytesRecv) << "clientfd: " << clientfd << std::endl;
 		std::cout << "---------------------" << std::endl;
 		parseMessage(std::string(buf, 0, bytesRecv), clientfd);
 		// Commands command(parseMessage(std::string(buf, 0, bytesRecv)));
@@ -230,9 +230,8 @@ void Server::pingUsers() {
 	std::map<int, User*>::iterator it;
 	for (it = this->_users.begin(); it != this->_users.end(); it++)
 	{
-		User &user = *it->second;
 		msg = "PING " + std::to_string(now) + "\r\n";
-		write(user.getFd(), msg.c_str(), msg.length());
+		write(it->first, msg.c_str(), msg.length());
 	}
 }
 
@@ -260,8 +259,11 @@ void Server::parseMessage(std::string input, int clientfd)
 		while (stream >> word) {
 			sub_vec.push_back(word);
 		}
-		Commands command(sub_vec, *(this->_users.find(clientfd)->second), *this);
-		command.determineCommand();
+		Commands* command = new Commands(sub_vec, clientfd, *this);
+		// command(sub_vec, *(this->_users.find(clientfd)->second), *this);
+		printusers();
+		command->determineCommand();
+		delete command;
 	}
 	
 	// std::string raw;
@@ -348,4 +350,26 @@ User	*Server::findUserByFd(int userfd)
 {
 	User	*founduser = _users.find(userfd)->second;
 	return (founduser);
+}
+
+void		Server::printusers()
+{
+	std::map<int, User *>::iterator it = _users.begin();
+	std::cout << "Es folgen alle User---------------------------" << std::endl;
+	for (; it != _users.end(); it++)
+	{
+		std::cout << "FD: " << it->first << "\nUsername: " << it->second->getUsername() << "\nNickname: " << it->second->getNickname() << std::endl;
+	}
+	std::cout << "----------------------------------------------" << std::endl;
+}
+
+
+std::map<int, User*>::iterator	Server::getItBegin()
+{
+	return _users.begin();
+}
+
+std::map<int, User*>::iterator	Server::getItEnd()
+{
+	return _users.end();
 }

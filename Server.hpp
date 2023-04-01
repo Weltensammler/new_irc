@@ -58,7 +58,9 @@ class Server
 		std::map<int, User*> getUsers() const;
 		User		*findUserByNick(std::string nickname);
 		User		*findUserByFd(int userfd);
-		
+		void		printusers();
+		std::map<int, User*>::iterator	getItBegin();
+		std::map<int, User*>::iterator	getItEnd();
 };
 
 #endif

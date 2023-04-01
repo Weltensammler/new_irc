@@ -34,7 +34,7 @@ class Commands
 		Server						&_server;
 		commandEnum					_type;
 		std::vector<std::string>	_message;
-		User						&_user;
+		int							_userfd;
 
 		void						passCommand();
 		void						userCommand();
@@ -56,7 +56,7 @@ class Commands
 		bool	_validateString(const std::string &string);
 		void	deleteUser(User &user);
 	public:
-		Commands(std::vector<std::string> message, User &user, Server &server);
+		Commands(std::vector<std::string> message, int userfd, Server &server);
 		~Commands();
 		void		determineCommand();
 		commandEnum	gettype();

@@ -9,32 +9,17 @@ Channel::Channel(std::string channelname) : _channelname(channelname) {}
 
 std::string Channel::getChannelName(){ return this->_channelname;}
 
-// void		Channel::addUser(User &newuser)
-// {
-// 	// std::pair<std::string, User&> pair = make_pair(newuser.getUsername(), newuser);
-// 	std::cout << "warum" << std::endl;
-// 	std::cout << newuser.getUsername() << std::endl;
-// 	_users[newuser.getUsername()] = newuser;
-// 	std::cout << "wieso" << std::endl;
-// 	std::cout << "add user called:" << this->_users.find(newuser.getUsername())->second.getUsername() << std::endl;
-// }
-
 void	Channel::addUser(int userfd)
 {
+	std::cout << "AddUser FD:" << userfd << std::endl;
 	for (std::vector<int>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
 		if (*it == userfd)
 			return ;
 	}
+	std::cout <<"User wird hinzugefügt fd:" << userfd << std::endl;
 	this->_users.push_back(userfd);
 }
-
-// void		Channel::setOperator(User &newoperator)
-// {
-// 	// std::pair<std::string, User> pair = make_pair(newoperator.getUsername(), newoperator);
-// 	// this->_operators.insert(pair);
-// 	_users[newoperator.getUsername()] = newoperator;
-// }
 
 void	Channel::setOperator(int operatorfd)
 {
@@ -46,35 +31,15 @@ void	Channel::setOperator(int operatorfd)
 	this->_users.push_back(operatorfd);
 }
 
-// std::map<std::string, User&>	Channel::getUsers() const
-// {
-// 	std::cout << "get users" << std::endl;
-// 	std::cout << _users.size() << std::endl;
-// 	std::cout << "get users2" << std::endl;
-// 	return (_users);
-// }
-
 std::vector<int>	Channel::getUsers() const
 {
 	return (_users);
 }
 
-// std::map<std::string, User&>	Channel::getOperators()
-// {
-// 	return (_operators);
-// }
-
 std::vector<int>	Channel::getOperators() const
 {
 	return (_operators);
 }
-
-// bool	Channel::isOperator(std::string username)
-// {
-// 	if (_operators.find(username) != _operators.end())
-// 		return (true);
-// 	return (false);
-// }
 
 bool	Channel::isOperator(int userfd)
 {
