@@ -98,11 +98,6 @@ void Commands::passCommand()
 		return;
 	}
 	std::cout << "PASS richtig!" << std::endl;
-	//TODO maybe rewrite so that getUSER is returning already the correct user and not the whole map
-	//TODO next two lines neccesary? because the user is already stored in command.hpp
-	// std::map<int, User*> users = _server.getUsers();
-	// User &user = *(users.find(this->ser.getFd())->second);
-	// std::cout << "Server.getUser() 104: " << _user.getFd() << std::endl;
 	this->_server.findUserByFd(_userfd)->setAuth(true);
 	return;
 }
@@ -141,14 +136,14 @@ void Commands::nickCommand() {
 	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
 	{
-		std::cout << "SetNickename "<< _message[1] << std::endl;
-		std::cout << "---------------------" << std::endl;
-		_server.printusers();
+		// std::cout << "SetNickename "<< _message[1] << std::endl;
+		// std::cout << "---------------------" << std::endl;
+		// _server.printusers();
 		this->_server.findUserByFd(_userfd)->setNickname(this->_message[1]);
-		std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
-		std::cout << "Nach set Nickname " << std::endl;
-		std::cout << "---------NICK------------" << std::endl;
-		_server.printusers();
+		// std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
+		// std::cout << "Nach set Nickname " << std::endl;
+		// std::cout << "---------NICK------------" << std::endl;
+		// _server.printusers();
 	}
 	else {
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
@@ -159,23 +154,19 @@ void Commands::nickCommand() {
 void Commands::privmsgCommand() {
 	std::cout << "Command PRIVMSG" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	std::cout << "here we are1" << std::endl;
 	if (this->_message.size() == 1) {
 		return sendError(ERR_NORECIPIENT, "");
 	}
 	if (this->_message.size() < 3) {
 		return sendError(ERR_NOTEXTTOSEND, "");
 	}
-	std::cout << "here we are2" << std::endl;
-
 	std::string	reciverNick = this->_message[1];
-
-	std::cout << "here we are3" << std::endl;
-	if (reciverNick.at(0) == '#') {
-	//TODO findChannel
-		sendMessageToChannel(_server.findChannel(this->_message[1]), this->_message[2]);
-		std::cout << "here we are4" << std::endl;
-	} else {
+	if (reciverNick.at(0) == '#')
+	{
+		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" + this->_server.findUserByFd(_userfd)->getNickname() + " " + "PRIVMSG" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n");
+	}
+	else
+	{
 		sendMessageToUser("PRIVMSG");
 	}
 }

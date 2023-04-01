@@ -172,36 +172,6 @@ void Server::readinput(int clientfd)
 		// Commands command(parseMessage(std::string(buf, 0, bytesRecv)));
 		// command.determineCommand();
 	}
-
-	// Send message
-	// std::string nick = "you";
-	// std::string user = "you";
-	// std::string channel = "#test";
-	// std::string message = buf;
-
-	// std::ostringstream cmd;
-	// cmd << ":ben JOIN :ch1\r\n"
-	// 	<< ":local 332 ben ch1 :Welcome to the channel!\r\n"
-	// 	<< ":local 353 ben = ch1 :ben\r\n";
-		// << ":Bene PRIVMSG ben@local :Hello are you receiving this message ?\r\n";
-		// << "NICK " << nick << "\r\n"
-		// << "USER " << user << " 0 * :" << user << "\r\n"
-		// << "JOIN " << channel << "\r\n"
-		// << "PRIVMSG " << channel << " :" << message << "\r\n";
-	// std::string cmd_str = cmd.str();
-
-	// char *join = ":ben@local JOIN :ch1\r\n";
-
-	// char *welcome = ":local 332 ben #ch1 :Welcome to the channel!\r\n";
-
-	// char *userlist = ":local 353 ben = #ch1 :ben\r\n";
-
-	// send(clientfd, cmd_str.c_str(), cmd_str.size(), 0);
-	// send(clientfd, join, sizeof(join), 0);
-	// send(clientfd, welcome, sizeof(welcome), 0);
-	// send(clientfd, userlist, sizeof(user), 0);
-	// send(clientfd, buf, bytesRecv + 1, 0);
-	//std::cout << "Message: " << message << std::endl;
 }
 
 void Server::mainLoop()
@@ -245,59 +215,35 @@ bool Server::checkPassword(std::string password)
 //* Vector[0] ist immer der Command, Vector[1 bis n - 1] optionale Angaben z.B.: Channelnamen,... Vector[n] ist immer Plane Text "Hi, wie geht es dir?"
 void Server::parseMessage(std::string input, int clientfd)
 {
-	std::vector<std::string> vec;
-	while (input.find('\n') != std::string::npos)
+	std::vector<std::string> sub_vec;
+	
+	if (input.find(":") != std::string::npos)
 	{
-		size_t index = input.find('\n');
-		std::string substring = input.substr(0, index);
-		input = input.substr(index + 1, input.length() - (index + 1));
-		// std::cout << "SUbstring: " << substring << std::endl;
-		// std::cout << "Neuer Input: " << input << std::endl;
-		std::vector<std::string> sub_vec;
-		std::stringstream stream(substring);
+		std::string first = input.substr(0, input.find(":"));
+		std::string second = input.substr(input.find(":") + 1);
+		std::cout << "First ->|" << first << "|<-" << std::endl;
+		std::cout << "second ->|" << second << "|<-" << std::endl;
+		std::stringstream stream(first);
 		std::string word;
-		while (stream >> word) {
+		while (stream >> word)
+		{
 			sub_vec.push_back(word);
 		}
-		Commands* command = new Commands(sub_vec, clientfd, *this);
-		// command(sub_vec, *(this->_users.find(clientfd)->second), *this);
-		printusers();
-		command->determineCommand();
-		delete command;
+		sub_vec.push_back(second);
 	}
-	
-	// std::string raw;
-	// std::string Text;
-	// std::vector<std::string> vec;
-	// size_t txt = input.find(':');
-	// std::cout << "Input: " << input << std::endl;
-	// std::cout << "---------------------" << std::endl;
-	// if (txt != -1)
-	// {
-	// 	std::string Text = input.substr(txt);
-	// 	raw =input.substr(0,txt);
-	// }
-	// vec = _find_str(raw, " ");
-	// vec.push_back(Text);
-	// std::cout << "Vec[0]: " << vec[0] << std::endl;
-	// std::cout << "---------------------" << std::endl;
-	//return vec;
-
+	else
+	{
+		std::stringstream stream(input);
+		std::string word;
+		while (stream >> word)
+		{
+			sub_vec.push_back(word);
+		}
+	}
+	Commands* command = new Commands(sub_vec, clientfd, *this);
+	command->determineCommand();
+	delete command;
 }
-
-// std::vector<std::string> Server::_find_str(std::string s, std::string del)
-// {
-// 	std::vector<std::string> vec;
-// 	int end = s.find(del); 
-// 	while (end != -1)
-// 	{
-// 		vec.push_back(s.substr(0, end));
-// 		s.erase(s.begin(), s.begin() + end + 1);
-// 		end = s.find(del);
-// 	}
-// 	vec.push_back(s.substr(0, end));
-// 	return vec;
-// }
 
 std::map<int, User*> Server::getUsers() const
 {
