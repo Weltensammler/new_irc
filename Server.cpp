@@ -161,16 +161,22 @@ void Server::readinput(int clientfd)
 		std::cerr << "The Client disconnected!" << std::endl;
 		clientfd *= -1; // it will be ignored in future
 	}
-	//TODO everything from here on has to be moved to the else and in there to a parser
 	else // data from client
 	{
-		// Display message
-		//TODO delete this after testing
 		std::cout << "Received: " << std::endl << std::string(buf, 0, bytesRecv) << "clientfd: " << clientfd << std::endl;
 		std::cout << "---------------------" << std::endl;
-		parseMessage(std::string(buf, 0, bytesRecv), clientfd);
-		// Commands command(parseMessage(std::string(buf, 0, bytesRecv)));
-		// command.determineCommand();
+		if (_storedmsg.find(clientfd) == _storedmsg.end() && std::string(buf, 0, bytesRecv).back() == '\n')
+			parseMessage(std::string(buf, 0, bytesRecv), clientfd);
+		else
+		{
+			_storedmsg[clientfd] = _storedmsg[clientfd] + std::string(buf, 0, bytesRecv);
+			std::cout << "stored message: " << _storedmsg[clientfd] << std::endl;
+			if (_storedmsg[clientfd].back() == '\n')
+			{
+				parseMessage(_storedmsg[clientfd], clientfd);
+				_storedmsg.erase(clientfd);
+			}
+		}
 	}
 }
 

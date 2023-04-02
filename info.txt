@@ -1,16 +1,14 @@
 Tasks:
 	- authenticate
-	- set NickName					50%
-	- set Username					50%
-	- join channel					done
-	- send receive privmsg			done
-	- operators and regular users	20%
-	- implement operator commands	10%
-
+	- set NickName										50%
+	- set Username										50%
+	- join channel										done
+	- send receive privmsg								done
+	- operators and regular users						30%
+	- implement operator commands						10%
+	- assemble incomplete messages (check for /r/n)		90% should work now but only checking for newline, not \r\n
 	- Verify absolutely every possible error and issue (receiving partial data, low bandwidth,
 	and so forth).
-
-	- assemble incomplete messages (check for /r/n)
 
 	Operatorcommands
 	- KILL

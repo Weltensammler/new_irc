@@ -34,6 +34,7 @@ class Server
 		int									_port;
 		std::string							_password;
 		std::map<std::string, Channel *>	_channel;
+		std::map<int, std::string>			_storedmsg;
 		// std::vector<std::string>	_find_str(std::string s, std::string del);
 
 	public:
