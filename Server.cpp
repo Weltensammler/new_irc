@@ -221,8 +221,8 @@ void Server::parseMessage(std::string input, int clientfd)
 	{
 		std::string first = input.substr(0, input.find(":"));
 		std::string second = input.substr(input.find(":") + 1);
-		std::cout << "First ->|" << first << "|<-" << std::endl;
-		std::cout << "second ->|" << second << "|<-" << std::endl;
+		// std::cout << "First ->|" << first << "|<-" << std::endl;
+		// std::cout << "second ->|" << second << "|<-" << std::endl;
 		std::stringstream stream(first);
 		std::string word;
 		while (stream >> word)

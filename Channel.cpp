@@ -24,6 +24,18 @@ void	Channel::addUser(int userfd)
 	this->_users.push_back(userfd);
 }
 
+void	Channel::deleteUser(int userfd)
+{
+	for (std::vector<int>::iterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (*it == userfd)
+		{
+			this->_users.erase(it);
+			return ;
+		}
+	}
+}
+
 void	Channel::setOperator(int operatorfd)
 {
 	for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); it++)

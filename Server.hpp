@@ -37,12 +37,12 @@ class Server
 		// std::vector<std::string>	_find_str(std::string s, std::string del);
 
 	public:
-		struct pollfd			_polls[MAX_USER];
-		Server();
-		Server(int port, std::string password);
-		Server(Server const &src);
-		~Server();
-		Server &operator=(Server const &src);
+		struct pollfd						_polls[MAX_USER];
+											Server();
+											Server(int port, std::string password);
+											Server(Server const &src);
+											~Server();
+		Server								&operator=(Server const &src);
 
 		int									createServer();
 		int									connectUser();

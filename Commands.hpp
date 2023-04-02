@@ -14,13 +14,11 @@ enum commandEnum
 	PRIVMSG,
 	NOTICE,
 	JOIN,
-	OPER,
-	QUIT,
+	INVITE,
+	TOPIC,
 	KILL,
 	KICK,
-	LIST,
-	WHO,
-	PART,
+	MODE,
 	MESSAGE
 };
 
@@ -42,27 +40,27 @@ class Commands
 		void						privmsgCommand();
 		void						noticeCommand();
 		void						joinCommand();
-		void						operCommand();
-		void						quitCommand();
+		void						inviteCommand();
+		void						topicCommand();
 		void						killCommand();
 		void						kickCommand();
-		void						listCommand();
-		void						whoCommand();
-		void						partCommand();
+		void						modeCommand();
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
 		bool						checkIfNicknameAlreadyUsed(std::string nickname);
 		bool						_allowedCharacter(char c);
 		bool						_validateString(const std::string &string);
-		void						deleteUser(User &user);
+		void						deleteUser();
+		void						removeUserFromChannels(int userfd);
+
 	public:
-		Commands(std::vector<std::string> message, int userfd, Server &server);
-		~Commands();
-		void		determineCommand();
-		commandEnum	gettype();
-		void		sendMessageToChannel(Channel *channel, std::string string, bool self);
-		void		sendMessageToUser(std::string reason);
-		void 		sendError(int errorCode, std::string arg);
+									Commands(std::vector<std::string> message, int userfd, Server &server);
+									~Commands();
+		void						determineCommand();
+		commandEnum					gettype();
+		void						sendMessageToChannel(Channel *channel, std::string string, bool self);
+		void						sendMessageToUser(std::string reason);
+		void 						sendError(int errorCode, std::string arg);
 };
 
 #endif

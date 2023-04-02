@@ -7,13 +7,11 @@ Commands::Commands(std::vector<std::string> message, int userfd, Server &server)
 	else if (message[0] == "PRIVMSG") {this->_type = PRIVMSG;}
 	else if (message[0] == "NOTICE") {this->_type = NOTICE;}
 	else if (message[0] == "JOIN") {this->_type = JOIN;}
-	else if (message[0] == "OPER") {this->_type = OPER;}
-	else if (message[0] == "QUIT") {this->_type = QUIT;}
+	else if (message[0] == "INVITE") {this->_type = INVITE;}
+	else if (message[0] == "TOPIC") {this->_type = TOPIC;}
 	else if (message[0] == "KILL") {this->_type = KILL;}
 	else if (message[0] == "KICK") {this->_type = KICK;}
-	else if (message[0] == "LIST") {this->_type = LIST;}
-	else if (message[0] == "WHO") {this->_type = WHO;}
-	else if (message[0] == "PART") {this->_type = PART;}
+	else if (message[0] == "MODE") {this->_type = MODE;}
 	else {this->_type = MESSAGE;}
 	this->_message = message;
 	std::cout << "Message is: " << (this->_message[0]) << std::endl;
@@ -45,11 +43,11 @@ void	Commands::determineCommand()
 		case JOIN:
 			this->joinCommand();
 			break;
-		case OPER:
-			this->operCommand();
+		case INVITE:
+			this->inviteCommand();
 			break;
-		case QUIT:
-			this->quitCommand();
+		case TOPIC:
+			this->topicCommand();
 			break;
 		case KILL:
 			this->killCommand();
@@ -57,14 +55,8 @@ void	Commands::determineCommand()
 		case KICK:
 			this->kickCommand();
 			break;
-		case LIST:
-			this->listCommand();
-			break;
-		case WHO:
-			this->whoCommand();
-			break;
-		case PART:
-			this->partCommand();
+		case MODE:
+			this->modeCommand();
 			break;
 		default:
 			this->sendMessage();
@@ -151,7 +143,8 @@ void Commands::nickCommand() {
 	}
 }
 
-void Commands::privmsgCommand() {
+void Commands::privmsgCommand()
+{
 	std::cout << "Command PRIVMSG" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	if (this->_message.size() == 1) {
@@ -173,9 +166,21 @@ void Commands::privmsgCommand() {
 	}
 }
 
-void Commands::noticeCommand() {
+void Commands::noticeCommand()
+{
 	std::cout << "Command NOTICE" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	if (this->_message.size() == 1) {
+		return sendError(ERR_NORECIPIENT, "");
+	}
+	if (this->_message.size() < 3) {
+		return sendError(ERR_NOTEXTTOSEND, "");
+	}
+	std::string	reciverNick = this->_message[1];
+	if (reciverNick.at(0) == '#')
+		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" + this->_server.findUserByFd(_userfd)->getNickname() + " " + "NOTICE" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
+	else
+		sendMessageToUser("NOTICE");
 }
 
 void Commands::joinCommand()
@@ -262,43 +267,39 @@ void Commands::joinCommand()
 	}
 }
 
-void Commands::operCommand() {
-	std::cout << "Command OPER" << std::endl;
-	std::cout << "---------------------" << std::endl;
-
-}
-
-void Commands::quitCommand() {
-	std::cout << "Command QUIT" << std::endl;
+void Commands::inviteCommand()
+{
+	std::cout << "Command INVITE" << std::endl;
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::killCommand() {
+void Commands::topicCommand()
+{
+	std::cout << "Command TOPIC" << std::endl;
+	std::cout << "---------------------" << std::endl;
+}
+
+void Commands::killCommand()
+{
 	std::cout << "Command KILL" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	deleteUser();
 }
 
-void Commands::kickCommand() {
+void Commands::kickCommand()
+{
 	std::cout << "Command KICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::listCommand() {
-	std::cout << "Command LIST" << std::endl;
+void Commands::modeCommand()
+{
+	std::cout << "Command MDOE" << std::endl;
 	std::cout << "---------------------" << std::endl;
 }
 
-void Commands::whoCommand() {
-	std::cout << "Command WHO" << std::endl;
-	std::cout << "---------------------" << std::endl;
-}
-
-void Commands::partCommand() {
-	std::cout << "Command PART" << std::endl;
-	std::cout << "---------------------" << std::endl;
-}
-
-void Commands::sendMessage() {
+void Commands::sendMessage()
+{
 	std::cout << "Command SEND MESSAGE" << std::endl;
 	std::cout << "---------------------" << std::endl;
 }
@@ -331,16 +332,30 @@ bool	Commands::checkIfNicknameAlreadyUsed(std::string nickname)
 	return (false);
 }
 
-void Commands::deleteUser(User &user) {
+void Commands::deleteUser()
+{
 	std::map<int, User*>::iterator it;
 	std::map<int, User*> users = _server.getUsers();
-	for (it = users.begin(); it != users.end(); ++it) {
-		if ((*it->second).getFd() == user.getFd()) {
-			// removeUserFromAllChannels(user, reason);
+	for (it = users.begin(); it != users.end(); ++it)
+	{
+		if ((*it->second).getFd() == this->_userfd)
+		{
+			this->removeUserFromChannels(this->_userfd);
 			users.erase(it);
-			_server._polls[user.getFd()].fd = -1;
+			_server._polls[this->_userfd].fd = -1;
 			break;
 		}
+	}
+}
+
+void Commands::removeUserFromChannels(int userfd)
+{
+	User *user = this->_server.findUserByFd(_userfd);
+	std::vector<Channel*> channels = user->getChannels();
+	std::vector<Channel*>::iterator it;
+	for (it = channels.begin(); it != channels.end(); it++)
+	{
+		(*it)->deleteUser(user->getFd());
 	}
 }
 
@@ -544,15 +559,17 @@ void Commands::sendMessageToUser(std::string reason)
 	// 	return;
 	// }
 	reciver = _server.findUserByNick(reciverNick);
-	if (reciver) {
+	if (reciver)
+	{
 		std::stringstream toSend;
-		toSend << ':' + reciver->getUserInfo() << " " <<
+		toSend << ':' + /*reciver->getUserInfo()*/ _server.findUserByFd(_userfd)->getUserInfo() << " " <<
 		reason << " " << reciverNick << " :" << message << "\r\n";
 		std::string str = toSend.str();
 		write(reciver->getFd(), str.c_str(), str.size());
 		// logger.logUserMessage(str, *reciver, OUT);
 	}
-	else {
+	else
+	{
 		this->sendError(ERR_NOSUCHNICK, "");
 	}
 }
