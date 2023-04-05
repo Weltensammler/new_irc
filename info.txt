@@ -1,5 +1,5 @@
 Tasks:
-	- authenticate
+	- authenticate										only authenticated users can join channels, maybe more
 	- set NickName										50%
 	- set Username										50%
 	- join channel										done
