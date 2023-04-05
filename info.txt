@@ -7,11 +7,13 @@ Tasks:
 	- operators and regular users						30%
 	- implement operator commands						10%
 	- assemble incomplete messages (check for /r/n)		90% should work now but only checking for newline, not \r\n
+	- delete partial message if client disconnects
+	- last part Networking specials (eval sheet)
 	- Verify absolutely every possible error and issue (receiving partial data, low bandwidth,
 	and so forth).
 
 	Operatorcommands
-	- KILL
+	- KILL maybe not implement this one due to documentation here (https://datatracker.ietf.org/doc/html/rfc2812#section-3.7.1)
 	- KICK
 	- TOPIC
 	- INVITE

@@ -23,6 +23,7 @@ Commands::~Commands() {}
 void	Commands::determineCommand()
 {
 	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
+	//TODO check if operator maybe check in the command (because here we don't really know the channel)
 	switch (this->gettype())
 	{
 		case PASS:
@@ -99,9 +100,8 @@ void Commands::userCommand() {
 	std::cout << "---------------------" << std::endl;
 	std::size_t messageSize = this->_message.size();
 	if (messageSize < 5) {
-		//return sendError(command, ERR_NEEDMOREPARAMS);
-		std::cout << "Error: ERR_NEEDMOREPARAMS" << std::endl;
-		return;
+		// return sendError(command, ERR_NEEDMOREPARAMS);
+		return ;
 	}
 	std::string realname = "";
 	int i = 0;
@@ -290,6 +290,47 @@ void Commands::kickCommand()
 {
 	std::cout << "Command KICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	//numeric replies:
+	//ERR_NEEDMOREPARAMS	done
+	//ERR_NOSUCHCHANNEL		done
+	//ERR_CHANOPRIVSNEEDED	done
+	//ERR_USERNOTINCHANNEL	done
+	//ERR_NOTONCHANNEL		done
+	//TODO tests funktionieren noch nicht so ganz check if operator sieht gut aus aber beim Rest hakt es noch
+	if (this->_message.size() < 3)
+	{
+		return sendError(ERR_NEEDMOREPARAMS, "");
+	}
+	if (!_server.findChannel(this->_message[1]))
+	{
+		return sendError(ERR_NOSUCHCHANNEL, "");
+	}
+	if (!checkIfOperator(this->_message[1], _userfd))
+	{
+		return sendError(ERR_CHANOPRIVSNEEDED, "");
+	}
+	if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[2])->getFd()))
+	{
+		return sendError(ERR_USERNOTINCHANNEL, "");
+	}
+	if (!checkIfUserOnChannel(this->_message[1], _userfd))
+	{
+		return sendError(ERR_NOTONCHANNEL, "");
+	}
+}
+
+bool	Commands::checkIfOperator(std::string channel, int userfd)
+{
+	if (!_server.findChannel(channel)->isOperator(_userfd))
+		return (false);
+	return (true);
+}
+
+bool	Commands::checkIfUserOnChannel(std::string channel, int userfd)
+{
+	if (!_server.findChannel(channel)->isOnCchannel(_userfd))
+		return (false);
+	return (true);
 }
 
 void Commands::modeCommand()

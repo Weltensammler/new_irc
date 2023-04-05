@@ -23,6 +23,7 @@ class Channel
 		std::vector<int>		getUsers() const ;
 		std::vector<int>		getOperators() const ;
 		bool					isOperator(int userfd);
+		bool					isOnCchannel(int userfd);
 };
 
 #endif

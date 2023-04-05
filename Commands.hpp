@@ -52,6 +52,8 @@ class Commands
 		bool						_validateString(const std::string &string);
 		void						deleteUser();
 		void						removeUserFromChannels(int userfd);
+		bool						checkIfOperator(std::string channel, int userfd);
+		bool						checkIfUserOnChannel(std::string channel, int userfd);
 
 	public:
 									Commands(std::vector<std::string> message, int userfd, Server &server);
