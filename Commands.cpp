@@ -228,10 +228,14 @@ void Commands::joinCommand()
 		}
 		else
 		{
-			if (std::find(this->_server.findUserByFd(_userfd)->getChannels().begin(), this->_server.findUserByFd(_userfd)->getChannels().end(), channel) == _server.findUserByFd(_userfd)->getChannels().end())
+			//std::cout <<" Ich bin hier HHHHHHHHHHHHHHHHHHHHHHHHHH"<< std::endl;
+			std::vector<Channel*> ch = this->_server.findUserByFd(_userfd)->getChannels();
+			std::vector<Channel*>::iterator begin = ch.begin();
+			std::vector<Channel*>::iterator end = ch.end();
+			if (std::find(begin, end, channel) == end)
 			{
 				this->_server.findUserByFd(_userfd)->setChannel(channel);
-				//std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
+				std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
 			}
 		}
@@ -277,6 +281,54 @@ void Commands::topicCommand()
 {
 	std::cout << "Command TOPIC" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	//ERR_NEEDMOREPARAMS		done
+	//ERR_NOSUCHCHANNEL			done
+	//ERR_NOTONCHANNEL			done
+	//ERR_CHANOPRIVSNEEDED		done
+	//RPL_NOTOPIC				done
+	//RPL_TOPIC					done
+	//RPL_NOTOPICWHOTIME		done
+	if (this->_message.size() < 2 || ((int)this->_message[1][0] == 13 && (int)this->_message[1][1] == 10))
+		return sendError(ERR_NEEDMOREPARAMS, "");
+	if (this->_message[1][0] != '#' || !_server.findChannel(this->_message[1]))
+		return sendError(ERR_NOSUCHCHANNEL, "");
+	if (!checkIfUserOnChannel(this->_message[1], this->_userfd))
+		return sendError(ERR_NOTONCHANNEL, "");
+	if (this->_message.size() == 2)
+	{
+		Channel *channel = this->_server.findChannel(this->_message[1]);
+		std::string topic = channel->getTopic();
+		if (topic.empty())
+			return sendReplyToUser(RPL_NOTOPIC, "");
+		else {
+			std::time_t setAt = channel->getTopicSetAt();
+			std::string setBy = channel->getTopicSetBy();
+			sendReplyToUser(RPL_TOPIC, topic);
+			return sendReplyToUser(RPL_TOPICWHOTIME, setBy + " " + std::to_string(setAt));
+		}
+	}
+	else if (this->_message.size() == 3 && this->_message[2][0] == ':' && ((int)this->_message[2][1] == 13 && (int)this->_message[2][2] == 10))
+	{
+		if (!checkIfOperator(this->_message[1], _userfd))
+			return sendError(ERR_CHANOPRIVSNEEDED, "");
+		Channel *channel = this->_server.findChannel(this->_message[1]);
+		channel->setTopic("");
+		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
+		channel->setTopicSetAt(std::time(nullptr));
+		//SEND TO ALL FEHLT
+		sendReplyToUser(RPL_TOPIC, "");
+		return ;
+	} else {
+		if (!checkIfOperator(this->_message[1], _userfd))
+			return sendError(ERR_CHANOPRIVSNEEDED, "");
+		Channel *channel = this->_server.findChannel(this->_message[1]);
+		channel->setTopic(this->_message[2]);
+		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
+		channel->setTopicSetAt(std::time(nullptr));
+		//SEND TO ALL FEHLT
+		sendReplyToUser(RPL_TOPIC, channel->getTopic());
+		return ;
+	}
 }
 
 void Commands::killCommand()
@@ -297,24 +349,35 @@ void Commands::kickCommand()
 	//ERR_USERNOTINCHANNEL	done
 	//ERR_NOTONCHANNEL		done
 	//TODO tests funktionieren noch nicht so ganz check if operator sieht gut aus aber beim Rest hakt es noch
+	std::cout << "message 1: " << this->_message[1] << "\nmessage 2: " << this->_message[2] << std::endl;
 	if (this->_message.size() < 3)
 	{
+		std::cout << "Kick zu wenig" << std::endl;
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	}
 	if (!_server.findChannel(this->_message[1]))
 	{
+		std::cout << "no channel" << std::endl;
 		return sendError(ERR_NOSUCHCHANNEL, "");
 	}
 	if (!checkIfOperator(this->_message[1], _userfd))
 	{
+		std::cout << "no operator" << std::endl;
 		return sendError(ERR_CHANOPRIVSNEEDED, "");
 	}
-	if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[2])->getFd()))
+	if (_server.findUserByNick(this->_message[2]))
 	{
-		return sendError(ERR_USERNOTINCHANNEL, "");
+		if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[2])->getFd()))
+		{
+			std::cout << "user not in channel" << std::endl;
+			return sendError(ERR_USERNOTINCHANNEL, "");
+		}
 	}
+	else
+		return sendError(ERR_USERNOTINCHANNEL, "");
 	if (!checkIfUserOnChannel(this->_message[1], _userfd))
 	{
+		std::cout << "you are not on channel" << std::endl;
 		return sendError(ERR_NOTONCHANNEL, "");
 	}
 }
@@ -540,6 +603,107 @@ void Commands::sendError(int errorCode, std::string arg)
 			break;
 		default:
 			msg += "UNKNOWN ERROR\n";
+			break;
+	}
+	write(_userfd, msg.c_str(), msg.size());
+}
+
+void	Commands::sendReplyToUser(int replyCode, std::string arg)
+{
+	std::string	msg = ":OurIRCServer ";
+	std::stringstream	stream;
+	std::string commandName = this->_message[0];
+	stream << replyCode;
+	msg += stream.str() + " " + _server.findUserByFd(_userfd)->getNickname();
+
+	switch (replyCode)
+	{
+		case RPL_NOWAWAY:
+			msg += " :You have been marked as being away\n";
+			break;
+		case RPL_WHOISOPERATOR:
+			msg +=  + " :is an IRC operator\n";
+			break;
+		case RPL_ENDOFWHOWAS:
+			msg +=  + " :End of WHOWAS\n";
+			break;
+		case RPL_LISTSTART:
+			msg += "Channel :Users  Name\n";
+			break;
+		case RPL_NOTOPIC:
+			msg +=  + " :No topic is set\n";
+			break;
+		case RPL_TOPIC:
+			msg +=  + " :" + arg + "\n";
+			break;
+		case RPL_TOPICWHOTIME:
+			msg +=  + " " + arg + "\n";
+			break;
+		case RPL_SUMMONING:
+			msg +=  + " :Summoning user to IRC\n";
+			break;
+		case RPL_ENDOFNAMES:
+			msg +=  + " :End of /NAMES list\n";
+			break;
+		case RPL_ENDOFLINKS:
+			msg +=  + " :End of /LINKS list\n";
+			break;
+		case RPL_ENDOFBANLIST:
+			msg +=  + " :End of channel ban list\n";
+			break;
+		case RPL_ENDOFINFO:
+			msg += " :End of /INFO list\n";
+			break;
+		case RPL_MOTDSTART:
+			msg += " :- Message of the day - \n";
+			break;
+		case RPL_ENDOFMOTD:
+			msg += " :End of /MOTD command\n";
+			break;
+		case RPL_YOUREOPER:
+			msg += " " + commandName + " :You are now an IRC operator\n";
+			break;
+		case RPL_REHASHING:
+			msg +=  + " :Rehashing\n";
+			break;
+		case RPL_USERSSTART:
+			msg += " :UserID   Terminal  Host\n";
+			break;
+		case RPL_USERS:
+			msg += " :%-8s %-9s %-8s\n";
+			break;
+		case RPL_ENDOFUSERS:
+			msg += " :End of users\n";
+			break;
+		case RPL_NOUSERS:
+			msg += " :Nobody logged in\n";
+			break;
+		case RPL_ENDOFSTATS:
+			msg +=  + " :End of /STATS report\n";
+			break;
+		case RPL_STATSUPTIME:
+			msg += " :Server Up %d days %d:%02d:%02d\n";
+			break;
+		case RPL_UMODEIS:
+			msg +=  + "\n";
+			break;
+		case RPL_LUSEROP:
+			msg +=  + " :operator(s) online\n";
+			break;
+		case RPL_LUSERUNKNOWN:
+			msg +=  + " :unknown connection(s)\n";
+			break;
+		case RPL_LUSERCHANNELS:
+			msg +=  + " :channels formed\n";
+			break;
+		case RPL_LUSERME:
+			msg += " :I have clients and servers\n";
+			break;
+		case RPL_ADMINME:
+			msg +=  + " :Administrative info\n";
+			break;
+		default:
+			msg += "UNKNOWN REPLY\n";
 			break;
 	}
 	write(_userfd, msg.c_str(), msg.size());

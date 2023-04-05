@@ -11,6 +11,9 @@ class Channel
 		std::string				_channelname;
 		std::vector<int>		_users;
 		std::vector<int>		_operators;
+		std::string				_topic;
+		std::string				_topicSetBy;
+		std::time_t				_topicSetAt;
 								Channel();
 
 	public:
@@ -24,6 +27,12 @@ class Channel
 		std::vector<int>		getOperators() const ;
 		bool					isOperator(int userfd);
 		bool					isOnCchannel(int userfd);
+		void					setTopic(std::string topic);
+		std::string				getTopic() const;
+		void					setTopicSetBy(std::string nick);
+		std::string				getTopicSetBy() const;
+		void					setTopicSetAt(std::time_t time);
+		std::time_t				getTopicSetAt() const;
 };
 
 #endif

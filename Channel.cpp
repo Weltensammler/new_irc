@@ -5,7 +5,7 @@ Channel::Channel()
 	_channelname = "default";
 }
 
-Channel::Channel(std::string channelname) : _channelname(channelname) {}
+Channel::Channel(std::string channelname) : _channelname(channelname), _topic(std::string()), _topicSetAt(NULL), _topicSetBy(std::string()) {}
 
 std::string Channel::getChannelName(){ return this->_channelname;}
 
@@ -74,4 +74,34 @@ bool	Channel::isOnCchannel(int userfd)
 			return (true);
 	}
 	return (false);
+}
+
+void	Channel::setTopic(std::string topic)
+{
+	this->_topic = topic;
+}
+
+
+std::string	Channel::getTopic() const {
+	return (this->_topic);
+}
+
+void	Channel::setTopicSetBy(std::string nick)
+{
+	this->_topicSetBy = nick;
+}
+
+std::string		Channel::getTopicSetBy() const
+{
+	return (this->_topicSetBy);
+}
+
+void	Channel::setTopicSetAt(std::time_t time)
+{
+	this->_topicSetAt = time;
+}
+
+std::time_t		Channel::getTopicSetAt() const
+{
+	return (this->_topicSetAt);
 }

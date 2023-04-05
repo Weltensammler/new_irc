@@ -62,6 +62,7 @@ class Commands
 		commandEnum					gettype();
 		void						sendMessageToChannel(Channel *channel, std::string string, bool self);
 		void						sendMessageToUser(std::string reason);
+		void						sendReplyToUser(int errorCode, std::string arg);
 		void 						sendError(int errorCode, std::string arg);
 };
 
