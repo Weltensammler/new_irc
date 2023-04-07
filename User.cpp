@@ -1,8 +1,8 @@
 #include "User.hpp"
 
-User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false) {}
+User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false), _operator(false), _voicestate(false) {}
 
-User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false) {}
+User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false), _operator(false), _voicestate(false) {}
 
 User::~User(){}
 
@@ -12,6 +12,7 @@ User		&User::operator=(const User &other)
 	this->_realname = other.getRealname();
 	this->_username = other.getUsername();
 	this->_nickname = other.getNickname();
+	this->_voicestate = other.getViceState();
 	return (*this);
 }
 
@@ -100,4 +101,31 @@ bool	User::getPasswordSent() const
 void	User::setPasswordSent(bool status)
 {
 	this->_passwordSent = status;
+}
+
+void	User::setOperator(bool Status)
+{
+	_operator = Status;
+}
+
+bool User::getVoiceState() const
+{
+	return _voicestate;
+}
+
+void User::setVoiceState(bool state)
+{
+	_voicestate = state;
+}
+
+void User::resetChannel(Channel * channel)
+{
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++)
+	{
+		if (*it == channel)
+		{
+			_channels.erase(it);
+			return;
+		}
+	}
 }

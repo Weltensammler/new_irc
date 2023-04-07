@@ -19,21 +19,21 @@ Tasks:
 	- INVITE
 	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)
 		modes:
+			channel:
 			- t (only operators can change topic)
-			- o (makes a user operator)
-			- v (gives a user voice status, can talk even if channel is in moderation mode) ---
-			- b (specified user can't access the channel)
 			- i (sets channel status to invite only, only operators can invite users)
-			- m (sets channel status to moderated only operators and users with voice status can send messages) ---
-			- n (no external messages, messages from other channels... will be blocked) ---
-
-			- l (set client limit to channel)
-			- s (secret channel) --> channel don `t show up to lists only if the user is in this channel
+			- m (sets channel status to moderated only operators and users with voice status can send messages) --Erledigt Tom--
+			- l (set client limit to channel) --Erledigt Tom--
+			
+			user:
+			- o (makes a user operator) --Erledigt Tom--
+			- v (gives a user voice status, can talk even if channel is in moderation mode) --Erledigt Tom--
+			- b (Ban user from Channel) --Erledigt Tom--
+			
 
 	Optional
-	- BAN
+	- BAN		--> Funktion ist beim User und im Kanal bereits hinterlegt, da ich es für /Mode +/-b brauchte
 	- UNBAN
-	
 
 
 PRIVMSG:

@@ -54,7 +54,7 @@ class Commands
 		void						removeUserFromChannels(int userfd);
 		bool						checkIfOperator(std::string channel, int userfd);
 		bool						checkIfUserOnChannel(std::string channel, int userfd);
-
+		bool						checkMain(int MinMsgSize, int MaxMsgSize = -1);
 	public:
 									Commands(std::vector<std::string> message, int userfd, Server &server);
 									~Commands();

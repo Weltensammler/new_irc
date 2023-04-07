@@ -65,7 +65,8 @@ void	Commands::determineCommand()
 	};
 }
 
-commandEnum	Commands::gettype() {
+commandEnum	Commands::gettype()
+{
 	return (this->_type);
 }
 
@@ -158,7 +159,14 @@ void Commands::privmsgCommand()
 	{
 		std::cout << "PRIVMSG#########" << std::endl;
 		//_server.printchannels();
-		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" + this->_server.findUserByFd(_userfd)->getNickname() + " " + "PRIVMSG" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
+		Channel *channel = _server.findChannel(this->_message[1]);
+		User *user =  this->_server.findUserByFd(_userfd);
+		if (channel->isModerated() == true && !user->getVoiceState() && !user->isOperator())
+		{
+			sendError(ERR_CHANOPRIVSNEEDED, "");
+			return;
+		}
+		sendMessageToChannel(channel, ":" +user->getNickname() + " " + "PRIVMSG" + " " + this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
 	}
 	else
 	{
@@ -234,9 +242,22 @@ void Commands::joinCommand()
 			std::vector<Channel*>::iterator end = ch.end();
 			if (std::find(begin, end, channel) == end)
 			{
-				this->_server.findUserByFd(_userfd)->setChannel(channel);
-				std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
-				channel->addUser(_userfd);
+				//*Check if User is Baned from the Channel
+				if (channel->isUserBaned(_userfd) == true)
+					return sendError(ERR_BANNEDFROMCHAN, "");
+
+				//*Check if channel limit is reached or is unset
+				if (channel->getlimit() == -1 || channel->getlimit() > channel->currUserNumbs())
+				{
+					this->_server.findUserByFd(_userfd)->setChannel(channel);
+					std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
+					channel->addUser(_userfd);
+					channel->incrementUserNumb();
+				}
+				else
+				{
+					return sendError(ERR_CHANNELISFULL, "");
+				}
 			}
 		}
 		std::cout << "JOIN" << std::endl;
@@ -275,6 +296,7 @@ void Commands::inviteCommand()
 {
 	std::cout << "Command INVITE" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	//TODO checkt inviteonly variable in INVITE command
 }
 
 void Commands::topicCommand()
@@ -309,8 +331,11 @@ void Commands::topicCommand()
 	}
 	else if (this->_message.size() == 3 && this->_message[2][0] == ':' && ((int)this->_message[2][1] == 13 && (int)this->_message[2][2] == 10))
 	{
-		if (!checkIfOperator(this->_message[1], _userfd))
-			return sendError(ERR_CHANOPRIVSNEEDED, "");
+		if (this->_server.findChannel(this->_message[1])->getTopicOperator())
+		{
+			if (!checkIfOperator(this->_message[1], _userfd))
+				return sendError(ERR_CHANOPRIVSNEEDED, "");
+		}
 		Channel *channel = this->_server.findChannel(this->_message[1]);
 		channel->setTopic("");
 		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
@@ -319,8 +344,11 @@ void Commands::topicCommand()
 		sendReplyToUser(RPL_TOPIC, "");
 		return ;
 	} else {
-		if (!checkIfOperator(this->_message[1], _userfd))
-			return sendError(ERR_CHANOPRIVSNEEDED, "");
+		if (this->_server.findChannel(this->_message[1])->getTopicOperator())
+		{
+			if (!checkIfOperator(this->_message[1], _userfd))
+				return sendError(ERR_CHANOPRIVSNEEDED, "");
+		}
 		Channel *channel = this->_server.findChannel(this->_message[1]);
 		channel->setTopic(this->_message[2]);
 		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
@@ -350,21 +378,26 @@ void Commands::kickCommand()
 	//ERR_NOTONCHANNEL		done
 	//TODO tests funktionieren noch nicht so ganz check if operator sieht gut aus aber beim Rest hakt es noch
 	std::cout << "message 1: " << this->_message[1] << "\nmessage 2: " << this->_message[2] << std::endl;
-	if (this->_message.size() < 3)
-	{
-		std::cout << "Kick zu wenig" << std::endl;
-		return sendError(ERR_NEEDMOREPARAMS, "");
-	}
-	if (!_server.findChannel(this->_message[1]))
-	{
-		std::cout << "no channel" << std::endl;
-		return sendError(ERR_NOSUCHCHANNEL, "");
-	}
-	if (!checkIfOperator(this->_message[1], _userfd))
-	{
-		std::cout << "no operator" << std::endl;
-		return sendError(ERR_CHANOPRIVSNEEDED, "");
-	}
+
+//!Original wird ersetzt durch
+	// if (this->_message.size() < 3)
+	// {
+	// 	std::cout << "Kick zu wenig" << std::endl;
+	// 	return sendError(ERR_NEEDMOREPARAMS, "");
+	// }
+	// if (!_server.findChannel(this->_message[1]))
+	// {
+	// 	std::cout << "no channel" << std::endl;
+	// 	return sendError(ERR_NOSUCHCHANNEL, "");
+	// }
+	// if (!checkIfOperator(this->_message[1], _userfd))
+	// {
+	// 	std::cout << "no operator" << std::endl;
+	// 	return sendError(ERR_CHANOPRIVSNEEDED, "");
+	// }
+//!Neue Funktion macht das selbe wie der alte Code, wenn kein MaxMsgSize vorhanden ist wird standard -1 gesetzt
+	if (checkMain(3) == false)
+		return;
 	if (_server.findUserByNick(this->_message[2]))
 	{
 		if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[2])->getFd()))
@@ -380,6 +413,7 @@ void Commands::kickCommand()
 		std::cout << "you are not on channel" << std::endl;
 		return sendError(ERR_NOTONCHANNEL, "");
 	}
+	//TODO wenn User von Channel gekickt wird channel->decremetUserNumb();
 }
 
 bool	Commands::checkIfOperator(std::string channel, int userfd)
@@ -400,6 +434,160 @@ void Commands::modeCommand()
 {
 	std::cout << "Command MDOE" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	//*check if channel exists, is operator and check msg size
+	if (checkMain(3,4) == false)
+		return;
+	//*check for add or remove option, is nothing given -> undefined behavior -> add
+	std::string m_char;
+	bool add;
+	if (this->_message[2].size() > 2)
+		return sendError(ERR_UNKNOWNMODE,"");
+	if (this->_message[2][0] == '+')
+	{
+		m_char = this->_message[2].substr(1);
+		add = true;
+	}
+	else if (this->_message[2][0] == '-')
+	{
+		m_char = this->_message[2].substr(1);
+		add = false;
+	}
+	else
+	{
+		m_char = this->_message[1];
+		add = true;
+	}
+
+	if (m_char == "t")
+	{
+		//TODO write function at the beginning of mode, that verifies messsage[1] is a Channel
+		//! checked in CheckMain --Tom--
+		if (add == true)
+			_server.findChannel(this->_message[1])->setTopicOperator(true);
+		else
+			_server.findChannel(this->_message[1])->setTopicOperator(false);
+		// t (only operators can change topic
+	}
+	else if (m_char == "i")
+	{
+		// i (sets channel status to invite only, only operators can invite users)
+		//TODO checkt inviteonly variable in INVITE command
+		if (add == true)
+			_server.findChannel(this->_message[1])->setInviteOnly(true);
+		else
+			_server.findChannel(this->_message[1])->setInviteOnly(false);
+	}
+	else if (m_char == "m")
+	{
+		// m (sets channel status to moderated only operators and users with voice status can send messages)
+		if (add == true)
+			_server.findChannel(this->_message[1])->setModerated(true);
+		else
+			_server.findChannel(this->_message[1])->setModerated(false);
+	}
+	else if (m_char == "l")
+	{
+		// l (set client limit to channel)
+		if (add == true)
+		{
+			if (this->_message.size() != 4)
+				return sendError(ERR_NEEDMOREPARAMS, "");
+			if (_server.findChannel(this->_message[1])->setlimit(std::atoi(this->_message[3].c_str())) == false)
+				return sendError(ERR_TOOMANYUSERS, "");
+		}
+		else
+		{
+			_server.findChannel(this->_message[1])->resetlimit();
+		}
+	}
+	//* from here on user modes
+	else if (m_char == "o")
+	{
+		// o (makes a user operator)
+		if (!checkIfUserOnChannel(this->_message[1], _userfd))
+		{
+			std::cout << "you are not on channel" << std::endl;
+			return sendError(ERR_NOTONCHANNEL, "");
+		}
+		if (_server.findUserByNick(this->_message[3]))
+		{
+			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
+			{
+				std::cout << "user not in channel" << std::endl;
+				return sendError(ERR_USERNOTINCHANNEL, "");
+			}
+		}
+		else
+			return sendError(ERR_NOSUCHNICK, "");
+		if (add == true)
+		{
+			_server.findUserByNick(this->_message[3])->setOperator(true);
+		}
+		else
+		{
+			_server.findUserByNick(this->_message[3])->setOperator(false);
+		}
+	}
+	else if (m_char == "v")
+	{
+		//* v (gives a user voice status, can talk even if channel is in moderation mode)
+		if (!checkIfUserOnChannel(this->_message[1], _userfd))
+		{
+			std::cout << "you are not on channel" << std::endl;
+			return sendError(ERR_NOTONCHANNEL, "");
+		}
+		if (_server.findUserByNick(this->_message[3]))
+		{
+			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
+			{
+				std::cout << "user not in channel" << std::endl;
+				return sendError(ERR_USERNOTINCHANNEL, "");
+			}
+		}
+		else
+			return sendError(ERR_NOSUCHNICK, "");
+		if (add == true)
+		{
+			_server.findUserByNick(this->_message[3])->setVoiceState(true);
+		}
+		else
+		{
+			_server.findUserByNick(this->_message[3])->setVoiceState(false);
+		}
+	}
+	else if (m_char == "b")
+	{
+		// b (specified user can't access the channel)
+		if (!checkIfUserOnChannel(this->_message[1], _userfd))
+		{
+			std::cout << "you are not on channel" << std::endl;
+			return sendError(ERR_NOTONCHANNEL, "");
+		}
+		if (_server.findUserByNick(this->_message[3]))
+		{
+			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
+			{
+				std::cout << "user not in channel" << std::endl;
+				return sendError(ERR_USERNOTINCHANNEL, "");
+			}
+		}
+		else
+			return sendError(ERR_NOSUCHNICK, "");
+		
+		Channel	*channel = _server.findChannel(_message[1]);
+		User*user = _server.findUserByNick(this->_message[3]);
+
+		if (add == true)
+		{
+			channel->banUser(user->getFd());
+			user->resetChannel(channel);
+		}
+		else
+		{
+			channel->unBanUser(user->getFd());
+			user->setChannel(channel);
+		}
+	}
 }
 
 void Commands::sendMessage()
@@ -778,3 +966,38 @@ void Commands::sendMessageToUser(std::string reason)
 		this->sendError(ERR_NOSUCHNICK, "");
 	}
 }
+
+bool Commands::checkMain(int MinMsgSize, int MaxMsgSize = -1)
+{
+	if (this->_message.size() < MinMsgSize)
+	{
+		std::cout << "Parameter zu wenig" << std::endl;
+		sendError(ERR_NEEDMOREPARAMS, "");
+		return false;
+	}
+	if (MaxMsgSize != -1)
+	{
+		if (this->_message.size() > MaxMsgSize)
+		{
+			std::cout << "Parameter zu viele" << std::endl;
+			sendError(ERR_TOOMANYPARAMS, "");
+			return false;
+		}
+	}
+	if (!_server.findChannel(this->_message[1]))
+	{
+		std::cout << "no channel" << std::endl;
+		sendError(ERR_NOSUCHCHANNEL, "");
+		return false;
+	}
+	if (!checkIfOperator(this->_message[1], _userfd))
+	{
+		std::cout << "no operator" << std::endl;
+		sendError(ERR_CHANOPRIVSNEEDED, "");
+		return false;
+	}
+	return true;
+}
+
+
+
