@@ -474,8 +474,6 @@ void Commands::kickCommand()
 	else
 		this->sendError(ERR_NOSUCHNICK, "");
 
-
-
 	//----------------------//
 	_server.findChannel(this->_message[1])->deleteUser(_userfd);
 	_server.findChannel(this->_message[1])->decrementUserNumb();
