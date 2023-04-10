@@ -17,7 +17,7 @@ std::string Channel::getChannelName(){ return this->_channelname;}
 
 void	Channel::addUser(int userfd)
 {
-	//std::cout << "########################################AddUser FD:" << userfd << std::endl;
+	//std::cout << "AddUser FD:" << userfd << std::endl;
 	for (std::vector<int>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
 		if (*it == userfd)

@@ -19,11 +19,10 @@ class User
 		bool					_passwordSent;
 		int						_fd;
 
-
 	public:
-		User();
-		User(int);
-		~User();
+								User();
+								User(int);
+								~User();
 		User					&operator= (const User &other);
 		int						getFd() const;
 		std::string				getUsername() const;

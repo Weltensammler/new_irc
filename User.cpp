@@ -1,8 +1,10 @@
 #include "User.hpp"
 
-User::User() : _nickname("Default"), _username("Default"), _realname("Default"), _fd(-1), _authorized(false), _operator(false), _voicestate(false) {}
+User::User() : _nickname("Default"), _username("Default"), _realname("Default"),
+				_fd(-1), _authorized(false), _operator(false), _voicestate(false) {}
 
-User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"), _fd(fd), _authorized(false), _operator(false), _voicestate(false) {}
+User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"),
+				_fd(fd), _authorized(false), _operator(false), _voicestate(false) {}
 
 User::~User(){}
 
@@ -12,7 +14,7 @@ User		&User::operator=(const User &other)
 	this->_realname = other.getRealname();
 	this->_username = other.getUsername();
 	this->_nickname = other.getNickname();
-	this->_voicestate = other.getViceState();
+	this->_voicestate = other.getVoiceState();
 	return (*this);
 }
 

@@ -4,7 +4,6 @@
 #include "Server.hpp"
 #include <vector>
 #include "Answers.hpp"
-// #include "Utils.hpp"
 
 enum commandEnum
 {
@@ -16,7 +15,6 @@ enum commandEnum
 	JOIN,
 	INVITE,
 	TOPIC,
-	KILL,
 	KICK,
 	MODE,
 	MESSAGE
@@ -42,7 +40,6 @@ class Commands
 		void						joinCommand();
 		void						inviteCommand();
 		void						topicCommand();
-		void						killCommand();
 		void						kickCommand();
 		void						modeCommand();
 		void						sendMessage();
@@ -50,8 +47,6 @@ class Commands
 		bool						checkIfNicknameAlreadyUsed(std::string nickname);
 		bool						_allowedCharacter(char c);
 		bool						_validateString(const std::string &string);
-		void						deleteUser();
-		void						removeUserFromChannels(int userfd);
 		bool						checkIfOperator(std::string channel, int userfd);
 		bool						checkIfUserOnChannel(std::string channel, int userfd);
 		bool						checkMain(int MinMsgSize, int MaxMsgSize = -1);
@@ -62,8 +57,9 @@ class Commands
 		commandEnum					gettype();
 		void						sendMessageToChannel(Channel *channel, std::string string, bool self);
 		void						sendMessageToUser(std::string reason);
-		void						sendReplyToUser(int errorCode, std::string arg);
+		void						sendReplyToUser(int errorCode, std::string arg, int userfd);
 		void 						sendError(int errorCode, std::string arg);
+		void						sendToAllUsers(std::map<int, User*> users, Channel *channel) const;
 };
 
 #endif

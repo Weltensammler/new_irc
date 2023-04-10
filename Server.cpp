@@ -3,12 +3,6 @@
 
 Server::Server(int port, std::string password) : _port(port), _password(password), _servername(SERVERNAME)
 {
-	// if (_checkPassword(password) == false)
-	// {
-	// 	std::cerr << "Wrong Password" << std::endl;
-	// 	return;
-	// }
-
 	for (int i = 0; i < 1024; i++)
 	{
 		this->_polls[i].fd = -1;
@@ -23,11 +17,10 @@ Server::Server()
 	this->_port = 54000;
 }
 
-Server::~Server()
-{
-}
+Server::~Server() {}
 
-Server &Server::operator=(Server const &src) {
+Server &Server::operator=(Server const &src)
+{
 	this->_password = src._password;
 	this->_port = src._port;
 	for (int i = 0; i < 1024; i++)
@@ -132,11 +125,8 @@ int Server::connectUser()
 					close(userSocket);
 				}
 			}
-			// TODO readinput
 			else // data from an existing connection, recieve it
-			{
 				readinput(this->_polls[i].fd);
-			}
 		}
 	}
 	return (0);
@@ -156,6 +146,8 @@ void Server::readinput(int clientfd)
 	}
 	else if (bytesRecv == 0)
 	{
+		if (_storedmsg.find(clientfd) != _storedmsg.end())
+			_storedmsg.erase(_storedmsg.find(clientfd));
 		if (close(clientfd) == -1)
 			std::cerr << "close!" << std::endl;
 		std::cerr << "The Client disconnected!" << std::endl;
@@ -218,7 +210,6 @@ bool Server::checkPassword(std::string password)
 	return true;
 }
 
-//* Vector[0] ist immer der Command, Vector[1 bis n - 1] optionale Angaben z.B.: Channelnamen,... Vector[n] ist immer Plane Text "Hi, wie geht es dir?"
 void Server::parseMessage(std::string input, int clientfd)
 {
 	std::vector<std::string> sub_vec;
@@ -227,14 +218,10 @@ void Server::parseMessage(std::string input, int clientfd)
 	{
 		std::string first = input.substr(0, input.find(":"));
 		std::string second = input.substr(input.find(":") + 1);
-		// std::cout << "First ->|" << first << "|<-" << std::endl;
-		// std::cout << "second ->|" << second << "|<-" << std::endl;
 		std::stringstream stream(first);
 		std::string word;
 		while (stream >> word)
-		{
 			sub_vec.push_back(word);
-		}
 		sub_vec.push_back(second);
 	}
 	else
@@ -242,9 +229,7 @@ void Server::parseMessage(std::string input, int clientfd)
 		std::stringstream stream(input);
 		std::string word;
 		while (stream >> word)
-		{
 			sub_vec.push_back(word);
-		}
 	}
 	Commands* command = new Commands(sub_vec, clientfd, *this);
 	command->determineCommand();
@@ -270,7 +255,6 @@ std::string	Server::getServername()
 
 Channel		*Server::findChannel(std::string channelname)
 {
-	// return(this->_channel[channelname]);
 	Channel	*foundchannel;
 	std::map<std::string, Channel*>::iterator it;
 
@@ -282,11 +266,13 @@ Channel		*Server::findChannel(std::string channelname)
 	return (0);
 }
 
-std::string	Server::getPassword() const {
+std::string	Server::getPassword() const
+{
 	return (this->_password);
 }
 
-User	*Server::findUserByNick(std::string nickname){
+User	*Server::findUserByNick(std::string nickname)
+{
 	User	*founduser;
 	std::map<int, User*>::iterator it;
 
@@ -315,7 +301,6 @@ void		Server::printusers()
 	std::cout << "----------------------------------------------" << std::endl;
 }
 
-
 std::map<int, User*>::iterator	Server::getItBegin()
 {
 	return _users.begin();
@@ -324,13 +309,4 @@ std::map<int, User*>::iterator	Server::getItBegin()
 std::map<int, User*>::iterator	Server::getItEnd()
 {
 	return _users.end();
-}
-
-void Server::printchannels()
-{
-	// std::cout << "--------------------------" <<std::endl;
-	// std::cout << "Show all channels:" << std::endl;
-	// for(std::map<std::string, Channel *>::iterator it = _channel.begin(); it != _channel.end(); it++)
-	// 	std::cout <<"Channel: " << it->first << std::endl;
-	// std::cout << "--------------------------" <<std::endl;
 }

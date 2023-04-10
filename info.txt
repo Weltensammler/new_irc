@@ -7,21 +7,21 @@ Tasks:
 	- operators and regular users						done
 	- implement operator commands						80%
 	- assemble incomplete messages (check for /r/n)		90% should work now but only checking for newline, not \r\n
-	- delete partial message if client disconnects
+	- delete partial message if client disconnects		done
 	- last part Networking specials (eval sheet)
 	- Verify absolutely every possible error and issue (receiving partial data, low bandwidth,
 	and so forth).
 
 	Operatorcommands
-	- KILL maybe not implement this one due to documentation here (https://datatracker.ietf.org/doc/html/rfc2812#section-3.7.1)
+	- KILL maybe not implement this one due to documentation here (https://datatracker.ietf.org/doc/html/rfc2812#section-3.7.1) --Erledigt--
 	- KICK
-	- TOPIC
+	- TOPIC --Erledigt--
 	- INVITE
-	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)
+	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)--Erledigt--
 		modes:
 			channel:
-			- t (only operators can change topic)
-			- i (sets channel status to invite only, only operators can invite users)
+			- t (only operators can change topic) --Erledigt Ben--
+			- i (sets channel status to invite only, only operators can invite users) --Erledigt Ben--
 			- m (sets channel status to moderated only operators and users with voice status can send messages) --Erledigt Tom--
 			- l (set client limit to channel) --Erledigt Tom--
 			
