@@ -132,13 +132,23 @@ void Commands::nickCommand() {
 		// std::cout << "SetNickename "<< _message[1] << std::endl;
 		// std::cout << "---------------------" << std::endl;
 		// _server.printusers();
+		std::string oldNick = this->_server.findUserByFd(_userfd)->getNickname();
 		this->_server.findUserByFd(_userfd)->setNickname(this->_message[1]);
+		if (this->_server.findUserByFd(_userfd)->getChannels().size() != 0)
+		{
+			//*Sended eine änerungsbenachrichtigung an alle Channels, in dem der User ist
+			std::vector<Channel *> channel = this->_server.findUserByFd(_userfd)->getChannels();
+			for (std::vector<Channel *>::iterator it; it != channel.end(); it++)
+				sendMessageToChannel(*it, ": "+ oldNick + " NICK " + this->_message[1] + "\r\n", true);
+			
+		}
 		// std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
 		// std::cout << "Nach set Nickname " << std::endl;
 		// std::cout << "---------NICK------------" << std::endl;
 		// _server.printusers();
 	}
-	else {
+	else
+	{
 		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
 		return sendError(ERR_ERRONEUSNICKNAME, "");
 	}
@@ -200,6 +210,8 @@ void Commands::joinCommand()
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	}
 	std::vector<std::string> newchannels = splitArgs(1);
+	if (_server.findUserByFd(_userfd)->getAuth() == false)
+		return sendError(ERR_NOTREGISTERED, "");
 	for(int i = 0; i < newchannels.size(); i++)
 	{
 		// std::string const	&channelName = command.getArgument(0);

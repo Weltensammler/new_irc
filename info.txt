@@ -1,11 +1,11 @@
 Tasks:
-	- authenticate										only authenticated users can join channels, maybe more
-	- set NickName										50%
-	- set Username										50%
+	- authenticate										only authenticated users can join channels, maybe more --> join funktioniert nun nur noch, wenn man auth ist<-- Tom
+	- set NickName										done
+	- set Username										done
 	- join channel										done
 	- send receive privmsg								done
-	- operators and regular users						30%
-	- implement operator commands						10%
+	- operators and regular users						done
+	- implement operator commands						80%
 	- assemble incomplete messages (check for /r/n)		90% should work now but only checking for newline, not \r\n
 	- delete partial message if client disconnects
 	- last part Networking specials (eval sheet)
