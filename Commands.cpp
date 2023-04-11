@@ -318,11 +318,8 @@ void Commands::inviteCommand()
 	}
 	if (_server.findUserByNick(_message[1]))
 	{
-		if (checkIfUserOnChannel(this->_message[2], _server.findUserByNick(_message[1])->getFd()))
-		{
-			std::cout << "you are allready on channel" << std::endl;
+		if (!checkIfUserOnChannel(this->_message[2], _server.findUserByNick(_message[1])->getFd()))
 			return sendError(ERR_USERONCHANNEL, "");
-		}
 	}
 	else
 		return sendError(ERR_USERNOTINCHANNEL, "");
@@ -366,16 +363,14 @@ void Commands::inviteCommand()
 	names << "\r\n";
 	std::string namesString = names.str();
 	write(usertoadd->getFd(), namesString.c_str(), namesString.length());
-	write(1, namesString.c_str(), namesString.length());
-
+	sendMessageToChannel(channel, namesString, true);
 	std::stringstream endOfNamesList;
 	endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 	std::string endOfNamesListString = endOfNamesList.str();
-	write(usertoadd->getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
-	write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
-	
+	// write(usertoadd->getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
+	sendMessageToChannel(channel, endOfNamesListString, true);
 	//send RPL_INVITE to inviter	done
-	sendReplyToUser(RPL_INVITING, " :" + _message[1] + " has been invited to " + _message[2] + "\n", _userfd);
+	sendReplyToUser(RPL_INVITING, " " + _message[1] + " " + _message[2] + "\n", _userfd);
 	//send INVITE msg to invited user
 }
 
