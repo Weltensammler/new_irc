@@ -12,6 +12,7 @@ Commands::Commands(std::vector<std::string> message, int userfd, Server &server)
 	else if (message[0] == "TOPIC") {this->_type = TOPIC;}
 	else if (message[0] == "KICK") {this->_type = KICK;}
 	else if (message[0] == "MODE") {this->_type = MODE;}
+	else if (message[0] == "WHO") {this->_type = WHO;}
 	else {this->_type = MESSAGE;}
 	this->_message = message;
 	std::cout << "Message is: " << (this->_message[0]) << std::endl;
@@ -55,6 +56,9 @@ void	Commands::determineCommand()
 		case MODE:
 			this->modeCommand();
 			break;
+		case WHO:
+			this->whoCommand();
+			break;
 		default:
 			this->sendMessage();
 			break;
@@ -64,6 +68,18 @@ void	Commands::determineCommand()
 commandEnum	Commands::gettype()
 {
 	return (this->_type);
+}
+
+void	Commands::whoCommand()
+{
+	//"<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
+	std::vector<int> users =  _server.findChannel(_message[1])->getUsers();
+	std::string msg = "";
+	std::vector<int>::iterator it = users.begin();
+	for (; it != users.end(); it++) {
+
+		// msg += std::to_string(*it) + _message[1] + _server.findUserByFd(*it)->getUsername() + "OurIRCServer" + "OurIRCServer" + _server.findUserByFd(*it)->getNickname() + 'H' + ' :' + _server.findUserByFd(*it)->getRealname();
+	}
 }
 
 void Commands::passCommand()
@@ -137,7 +153,6 @@ void Commands::nickCommand()
 			std::vector<Channel *> channel = this->_server.findUserByFd(_userfd)->getChannels();
 			for (std::vector<Channel *>::iterator it; it != channel.end(); it++)
 				sendMessageToChannel(*it, ": "+ oldNick + " NICK " + this->_message[1] + "\r\n", true);
-			
 		}
 		// std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
 		// std::cout << "Nach set Nickname " << std::endl;
@@ -164,9 +179,13 @@ void Commands::privmsgCommand()
 	{
 		std::cout << "PRIVMSG" << std::endl;
 		Channel *channel = _server.findChannel(this->_message[1]);
+		std::vector<int> ops = channel->getOperators();
 		User *user =  this->_server.findUserByFd(_userfd);
-		if (channel->isModerated() == true && !user->getVoiceState() && !user->isOperator())
+		std::cout << "OP-Status ---> " << (std::find(ops.begin(), ops.end(), _userfd) == ops.end()) << std::endl;
+		if (channel->isModerated() == true && !channel->get_voice_state(user->getFd()) && std::find(ops.begin(), ops.end(), _userfd) == ops.end())
+		{
 			return sendError(ERR_CHANOPRIVSNEEDED, "");
+		}
 		sendMessageToChannel(channel, ":" +user->getNickname() + " " + "PRIVMSG" + " " +
 							this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
 	}
@@ -195,6 +214,7 @@ void Commands::joinCommand()
 {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
+	std::cout << "Nickname = " << _server.findUserByFd(_userfd)->getNickname() << std::endl;
 	if (this->_message.size() < 2)
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	std::vector<std::string> newchannels = splitArgs(1);
@@ -214,33 +234,29 @@ void Commands::joinCommand()
 				channel = new Channel(newchannels[i]);
 				_server.setChannel(channel);
 				_server.findUserByFd(_userfd)->setChannel(channel);
+				channel->setOperator(_userfd);
 				std::cout << "user join 207: "<< this->_server.findUserByFd(_userfd)->getUsername() << " user fd: " << _userfd << std::endl;
 				std::cout << "Adduser to Channel Join 1 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
+				channel->incrementUserNumb();
 				channel->setOperator(_userfd);
 		}
 		else
 		{
-			std::vector<Channel*> ch = this->_server.findUserByFd(_userfd)->getChannels();
-			std::vector<Channel*>::iterator begin = ch.begin();
-			std::vector<Channel*>::iterator end = ch.end();
-			if (std::find(begin, end, channel) == end)
-			{
-				//*Check if User is Baned from the Channel
-				if (channel->isUserBaned(_userfd) == true)
-					return sendError(ERR_BANNEDFROMCHAN, "");
-
+			std::cout << "Join Command in der Else in der inneren IF" << std::endl;
+			//*Check if User is Baned from the Channel
+			if (channel->isUserBaned(_userfd) == true)
+				return sendError(ERR_BANNEDFROMCHAN, "");
 				//*Check if channel limit is reached or is unset
-				if (channel->getlimit() == -1 || channel->getlimit() > channel->currUserNumbs())
-				{
-					this->_server.findUserByFd(_userfd)->setChannel(channel);
-					std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
-					channel->addUser(_userfd);
-					channel->incrementUserNumb();
-				}
-				else
-					return sendError(ERR_CHANNELISFULL, "");
+			if (channel->getlimit() == -1 || channel->getlimit() > channel->currUserNumbs())
+			{
+				this->_server.findUserByFd(_userfd)->setChannel(channel);
+				std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
+				channel->addUser(_userfd);
+				channel->incrementUserNumb();
 			}
+			else
+				return sendError(ERR_CHANNELISFULL, "");
 		}
 		std::cout << "JOIN" << std::endl;
 		sendMessageToChannel(channel, ":" + this->_server.findUserByFd(_userfd)->getUserInfo() +
@@ -249,27 +265,31 @@ void Commands::joinCommand()
 		std::stringstream names;
 		std::vector<int> users = channel->getUsers();
 		std::vector<int> operators = channel->getOperators();
-		names << ":" + _server.getServername() +" 353 " << _server.findUserByFd(_userfd)->getNickname() <<
+		names << ":" + _server.getServername() + " 353 " << _server.findUserByFd(_userfd)->getNickname() <<
 		" = " << channel->getChannelName() << " :";
 		std::vector<int>::iterator it = users.begin();
 		std::vector<int>::iterator end = users.end();
 		for (; it != end; it++)
 		{
-			if (channel->isOperator(*it) || _server.findUserByFd(*it)->isOperator())
+			if (channel->isOperator(*it))
 				names << '@';
 			names << _server.findUserByFd(*it)->getNickname();
 			names << ' ';
 		}
 		names << "\r\n";
 		std::string namesString = names.str();
-		write(_userfd, namesString.c_str(), namesString.length());
-		write(1, namesString.c_str(), namesString.length());
+		std::cout << "Namestring: " << namesString << std::endl;
+		sendMessageToChannel(channel, namesString, true);
+		// write(_userfd, namesString.c_str(), namesString.length());
+		// write(1, namesString.c_str(), namesString.length());
 
 		std::stringstream endOfNamesList;
-		endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
+		endOfNamesList << ":" + _server.getServername() + " 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 		std::string endOfNamesListString = endOfNamesList.str();
-		write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
-		write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
+		sendMessageToChannel(channel, endOfNamesListString, true);
+		// write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
+		// write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
+		sendMessageToChannel(channel, endOfNamesListString, true);
 	}
 }
 
@@ -335,10 +355,10 @@ void Commands::inviteCommand()
 	names << ":" + _server.getServername() +" 353 " << usertoadd->getNickname() <<
 	" = " << channel->getChannelName() << " :";
 	std::vector<int>::iterator it = users.begin();
-	std::vector<int>::iterator end = users.end();
-	for (; it != end; it++)
+	std::vector<int>::iterator newend = users.end();
+	for (; it != newend; it++)
 	{
-		if (channel->isOperator(*it) || _server.findUserByFd(*it)->isOperator())
+		if (channel->isOperator(*it))
 			names << '@';
 		names << _server.findUserByFd(*it)->getNickname();
 		names << ' ';
@@ -355,7 +375,7 @@ void Commands::inviteCommand()
 	write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
 	
 	//send RPL_INVITE to inviter	done
-	sendReplyToUser(RPL_INVITING, " :" + _message[1] + " has been invited to " + _message[2] + "\n");
+	sendReplyToUser(RPL_INVITING, " :" + _message[1] + " has been invited to " + _message[2] + "\n", _userfd);
 	//send INVITE msg to invited user
 }
 
@@ -363,13 +383,6 @@ void Commands::topicCommand()
 {
 	std::cout << "Command TOPIC" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	//ERR_NEEDMOREPARAMS		done
-	//ERR_NOSUCHCHANNEL			done
-	//ERR_NOTONCHANNEL			done
-	//ERR_CHANOPRIVSNEEDED		done
-	//RPL_NOTOPIC				done
-	//RPL_TOPIC					done
-	//RPL_NOTOPICWHOTIME		done
 	if (this->_message.size() < 2 || ((int)this->_message[1][0] == 13 && (int)this->_message[1][1] == 10))
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	if (this->_message[1][0] != '#' || !_server.findChannel(this->_message[1]))
@@ -386,8 +399,8 @@ void Commands::topicCommand()
 		{
 			std::time_t setAt = channel->getTopicSetAt();
 			std::string setBy = channel->getTopicSetBy();
-			sendReplyToUser(RPL_TOPIC, topic, this->_userfd);
-			return sendReplyToUser(RPL_TOPICWHOTIME, setBy + " " + std::to_string(setAt), this->_userfd);
+			sendReplyToUser(RPL_TOPIC, topic, this->_userfd, channel->getChannelName());
+			return sendReplyToUser(RPL_TOPICWHOTIME, setBy + " " + std::to_string(setAt), this->_userfd, channel->getChannelName());
 		}
 	}
 	else if (this->_message.size() == 3 && this->_message[2][0] == ':' && ((int)this->_message[2][1] == 13 && (int)this->_message[2][2] == 10))
@@ -401,7 +414,7 @@ void Commands::topicCommand()
 		channel->setTopic("");
 		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
 		channel->setTopicSetAt(std::time(nullptr));
-		sendToAllUsers(this->_server.getUsers(), channel);
+		sendTopicToAllUsersOfChannel(channel->getUsers(), channel);
 		return ;
 	}
 	else
@@ -415,7 +428,7 @@ void Commands::topicCommand()
 		channel->setTopic(this->_message[2]);
 		channel->setTopicSetBy(_server.findUserByFd(_userfd)->getNickname());
 		channel->setTopicSetAt(std::time(nullptr));
-		sendToAllUsers(this->_server.getUsers(), channel);
+		sendTopicToAllUsersOfChannel(channel->getUsers(), channel);
 		return ;
 	}
 }
@@ -454,29 +467,29 @@ void Commands::kickCommand()
 
 
 	std::stringstream	logStream;
-	std::string			reciverNick = this->_message[2];
+	std::string			receiverNick = this->_message[2];
 	std::string			message = "";
 	if (_message.size() == 4)
 		message = this->_message[3];
 	else
 		message = "An Operator kicked you from the channel!";
-	User				*reciver = 0;
+	User				*receiver = 0;
 
-	reciver = _server.findUserByNick(reciverNick);
-	if (reciver)
+	receiver = _server.findUserByNick(receiverNick);
+	if (!receiver)
+		return this->sendError(ERR_NOSUCHNICK, "");
+
+	std::vector<Channel *> channels = _server.findUserByFd(_userfd)->getChannels();
+	std::vector<Channel *>::iterator it = std::find(channels.begin(), channels.end(), _server.findChannel(_message[1]));
+	if (it != channels.end())
 	{
-		std::stringstream toSend;
-		toSend << ':' + /*reciver->getUserInfo()*/ _server.findUserByFd(_userfd)->getUserInfo() << " " <<
-		" " << reciverNick << " :" << message << "\r\n";
-		std::string str = toSend.str();
-		write(reciver->getFd(), str.c_str(), str.size());
+		std::cout << "Erase linked Channel from User" << (*it)->getChannelName() << std::endl;
+		sendMessageToChannel(*it, ":OurIRCServer!" + _server.findUserByFd(_userfd)->getUserInfo() + " KICK " + _message[1]
+							+ " " + receiver->getNickname() + " " + _server.findUserByFd(_userfd)->getNickname() + " " + message + "\r\n", true);
+		channels.erase(it);
+		_server.findChannel(this->_message[1])->deleteUser(receiver->getFd());
+		_server.findChannel(this->_message[1])->decrementUserNumb();
 	}
-	else
-		this->sendError(ERR_NOSUCHNICK, "");
-
-	//----------------------//
-	_server.findChannel(this->_message[1])->deleteUser(_userfd);
-	_server.findChannel(this->_message[1])->decrementUserNumb();
 }
 
 bool	Commands::checkIfOperator(std::string channel, int userfd)
@@ -578,9 +591,58 @@ void Commands::modeCommand()
 		else
 			return sendError(ERR_NOSUCHNICK, "");
 		if (add == true)
-			_server.findUserByNick(this->_message[3])->setOperator(true);
+		{
+			_server.findChannel(this->_message[1])->setOperator(_server.findUserByNick(this->_message[3])->getFd());
+			std::stringstream names;
+			std::vector<int> users = _server.findChannel(this->_message[1])->getUsers();
+			std::vector<int> operators = _server.findChannel(this->_message[1])->getOperators();
+			names << ":" + _server.getServername() + " 353 " << _server.findUserByFd(_userfd)->getNickname() <<
+			" = " << _server.findChannel(this->_message[1])->getChannelName() << " :";
+			std::vector<int>::iterator it = users.begin();
+			std::vector<int>::iterator end = users.end();
+			for (; it != end; it++)
+			{
+				if (_server.findChannel(this->_message[1])->isOperator(*it))
+					names << '@';
+				names << _server.findUserByFd(*it)->getNickname();
+				names << ' ';
+			}
+			names << "\r\n";
+			std::string namesString = names.str();
+			sendMessageToChannel(_server.findChannel(this->_message[1]), namesString, true);
+			std::stringstream endOfNamesList;
+			endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << _server.findChannel(this->_message[1])->getChannelName() << " :End of /NAMES list.\r\n";
+			std::string endOfNamesListString = endOfNamesList.str();
+			sendMessageToChannel(_server.findChannel(this->_message[1]), endOfNamesListString, true);
+		}
 		else
-			_server.findUserByNick(this->_message[3])->setOperator(false);
+		{
+			std::cout << "I'm here" << std::endl;
+			_server.findChannel(this->_message[1])->resetOperator(_server.findUserByNick(this->_message[3])->getFd());
+			std::stringstream names;
+			std::vector<int> users = _server.findChannel(this->_message[1])->getUsers();
+			std::vector<int> operators = _server.findChannel(this->_message[1])->getOperators();
+			names << ":" + _server.getServername() +" 353 " << _server.findUserByFd(_userfd)->getNickname() <<
+			" = " << _server.findChannel(this->_message[1])->getChannelName() << " :";
+			std::vector<int>::iterator it = users.begin();
+			std::vector<int>::iterator end = users.end();
+			for (; it != end; it++)
+			{
+				if (_server.findChannel(this->_message[1])->isOperator(*it))
+					names << '@';
+				names << _server.findUserByFd(*it)->getNickname();
+				names << ' ';
+			}
+			names << "\r\n";
+			std::string namesString = names.str();
+			// write(_userfd, namesString.c_str(), namesString.length());
+			sendMessageToChannel(_server.findChannel(this->_message[1]), namesString, true);
+			std::stringstream endOfNamesList;
+			endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << _server.findChannel(this->_message[1])->getChannelName() << " :End of /NAMES list.\r\n";
+			std::string endOfNamesListString = endOfNamesList.str();
+			// write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
+			sendMessageToChannel(_server.findChannel(this->_message[1]), endOfNamesListString, true);
+		}
 	}
 	else if (m_char == "v")
 	{
@@ -601,9 +663,9 @@ void Commands::modeCommand()
 		else
 			return sendError(ERR_NOSUCHNICK, "");
 		if (add == true)
-			_server.findUserByNick(this->_message[3])->setVoiceState(true);
+			_server.findChannel(this->_message[1])->set_voice_state(_server.findUserByNick(this->_message[3])->getFd());
 		else
-			_server.findUserByNick(this->_message[3])->setVoiceState(false);
+			_server.findChannel(this->_message[1])->reset_voice_state(_server.findUserByNick(this->_message[3])->getFd());
 	}
 	else if (m_char == "b")
 	{
@@ -640,12 +702,12 @@ void Commands::modeCommand()
 	}
 }
 
-void	Commands::sendToAllUsers(std::map<int, User*> users, Channel *channel) const
+void	Commands::sendTopicToAllUsersOfChannel(std::vector<int> users, Channel *channel) const
 {
-	std::map<int, User*>::iterator it;
-	for (it = users.begin(); it != users.end(); it++)
+	std::cout << "TOPIC WIRD GESENDET: " << channel->getTopic() << std::endl;
+	for (std::vector<int>::const_iterator it = users.begin(); it != users.end(); it++)
 	{
-		sendReplyToUser(RPL_TOPIC, channel->getTopic(), it->second->getFd());
+		sendReplyToUser(RPL_TOPIC, channel->getTopic(), *it, channel->getChannelName());
 	}
 }
 
@@ -829,13 +891,16 @@ void Commands::sendError(int errorCode, std::string arg)
 	write(_userfd, msg.c_str(), msg.size());
 }
 
-void	Commands::sendReplyToUser(int replyCode, std::string arg, int userfd)
+void	Commands::sendReplyToUser(int replyCode, std::string arg, int userfd, std::string channelName) const
 {
 	std::string	msg = ":OurIRCServer ";
 	std::stringstream	stream;
 	std::string commandName = this->_message[0];
 	stream << replyCode;
 	msg += stream.str() + " " + _server.findUserByFd(userfd)->getNickname();
+	// msg += stream.str() + " " + "julien";
+	std::cout << "MESSAGE: " << msg << std::endl;
+	std::cout << "ARGS: " << arg << std::endl;
 
 	switch (replyCode)
 	{
@@ -858,11 +923,15 @@ void	Commands::sendReplyToUser(int replyCode, std::string arg, int userfd)
 			msg +=  + " :No topic is set\n";
 			break;
 		case RPL_TOPIC:
-			msg +=  + " :" + arg + "\n";
+			msg += " " + channelName + " :" + arg + "\n";
+			std::cout << "Wir sind in Topic -->" << msg << std::endl;
 			break;
 		case RPL_TOPICWHOTIME:
-			msg +=  + " " + arg + "\n";
+		{
+			msg += " " + channelName + " " + arg + "\n";
+			std::cout << "Wir sind in TopicWho -->" << msg << std::endl;
 			break;
+		}
 		case RPL_SUMMONING:
 			msg +=  + " :Summoning user to IRC\n";
 			break;
@@ -924,7 +993,7 @@ void	Commands::sendReplyToUser(int replyCode, std::string arg, int userfd)
 			msg += "UNKNOWN REPLY\n";
 			break;
 	}
-	write(_userfd, msg.c_str(), msg.size());
+	write(userfd, msg.c_str(), msg.size());
 }
 
 bool	Commands::_allowedCharacter(char c)
@@ -936,7 +1005,7 @@ bool	Commands::_allowedCharacter(char c)
 
 bool	Commands::_validateString(const std::string &string)
 {
-	for (std::vector<const char>::iterator it = string.begin(); it != string.end(); ++it)
+	for (std::string::const_iterator it = string.begin(); it != string.end(); ++it)
 		if (!_allowedCharacter(*it))
 			return false;
 	return true;
@@ -945,7 +1014,6 @@ bool	Commands::_validateString(const std::string &string)
 void	Commands::sendMessageToChannel(Channel *channel, std::string string, bool self)
 {
 	std::vector<int>	users = channel->getUsers();
-
 	for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it)
 	{
 		std::cout << "it == " << *it << " | self == " << self << std::endl;
@@ -987,7 +1055,7 @@ void Commands::sendMessageToUser(std::string reason)
 		this->sendError(ERR_NOSUCHNICK, "");
 }
 
-bool Commands::checkMain(int MinMsgSize, int MaxMsgSize = -1)
+bool Commands::checkMain(int MinMsgSize, int MaxMsgSize)
 {
 	if (this->_message.size() < MinMsgSize)
 	{

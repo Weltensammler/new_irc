@@ -10,7 +10,7 @@ Channel::Channel()
 
 Channel::Channel(std::string channelname) :	_channelname(channelname),
 											_topicoperator(true), _inviteonly(false),
-											_topic(std::string()), _topicSetAt(NULL),
+											_topic(std::string()), _topicSetAt(std::time_t(nullptr)),
 											_topicSetBy(std::string()), _limit(-1), _currUserNumb(1), _isModerated(false) {}
 
 std::string Channel::getChannelName(){ return this->_channelname;}
@@ -22,10 +22,11 @@ void	Channel::addUser(int userfd)
 	{
 		if (*it == userfd)
 		{
-			//std::cout << "User schon vorhanden: " << *it<< std::endl;
+			std::cout << "User schon vorhanden: " << *it<< std::endl;
 			return ;
 		}
 	}
+	std::cout << "User wird dem Channel hinzugefügt" << std::endl;
 	//std::cout << "vector size: " << _users.size() << std::endl;
 	this->_users.push_back(userfd);
 }
@@ -36,6 +37,7 @@ void	Channel::deleteUser(int userfd)
 	{
 		if (*it == userfd)
 		{
+			std::cout << "User " << userfd << " wird von " << _channelname << " gelöscht" << std::endl;
 			this->_users.erase(it);
 			return ;
 		}
@@ -212,4 +214,46 @@ bool	Channel::isModerated() const
 void	Channel::setModerated(bool State)
 {
 	_isModerated = State;
+}
+
+void					Channel::set_voice_state(int userfd)
+{
+	_voice_state.push_back(userfd);
+}
+
+void					Channel::reset_voice_state(int userfd)
+{
+	std::vector<int>::iterator it = _voice_state.begin();
+	for	(; it != _voice_state.end(); it++)
+	{
+		if (*it == userfd)
+		{
+			_voice_state.erase(it);
+			return;
+		}
+	}
+}
+
+bool	Channel::get_voice_state(int userfd)
+{
+	std::vector<int>::iterator it = _voice_state.begin();
+	for	(; it != _voice_state.end(); it++)
+	{
+		if (*it == userfd)
+			return true;
+	}
+	return false;
+}
+
+void	Channel::resetOperator(int operatorfd)
+{
+	std::vector<int>::iterator it = _operators.begin();
+	for	(; it != _operators.end(); it++)
+	{
+		if (*it == operatorfd)
+		{
+			_operators.erase(it);
+			return;
+		}
+	}
 }

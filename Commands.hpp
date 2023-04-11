@@ -17,7 +17,8 @@ enum commandEnum
 	TOPIC,
 	KICK,
 	MODE,
-	MESSAGE
+	MESSAGE,
+	WHO
 };
 
 class User;
@@ -42,6 +43,7 @@ class Commands
 		void						topicCommand();
 		void						kickCommand();
 		void						modeCommand();
+		void						whoCommand();
 		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
 		bool						checkIfNicknameAlreadyUsed(std::string nickname);
@@ -57,9 +59,9 @@ class Commands
 		commandEnum					gettype();
 		void						sendMessageToChannel(Channel *channel, std::string string, bool self);
 		void						sendMessageToUser(std::string reason);
-		void						sendReplyToUser(int errorCode, std::string arg, int userfd);
+		void						sendReplyToUser(int errorCode, std::string arg, int userfd, std::string channelName = "") const;
 		void 						sendError(int errorCode, std::string arg);
-		void						sendToAllUsers(std::map<int, User*> users, Channel *channel) const;
+		void						sendTopicToAllUsersOfChannel(std::vector<int> users, Channel *channel) const;
 };
 
 #endif

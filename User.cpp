@@ -1,10 +1,10 @@
 #include "User.hpp"
 
 User::User() : _nickname("Default"), _username("Default"), _realname("Default"),
-				_fd(-1), _authorized(false), _operator(false), _voicestate(false) {}
+				_fd(-1), _authorized(false) {}
 
 User::User(int fd) : _nickname("Default"), _username("Default"), _realname("Default"),
-				_fd(fd), _authorized(false), _operator(false), _voicestate(false) {}
+				_fd(fd), _authorized(false) {}
 
 User::~User(){}
 
@@ -14,7 +14,6 @@ User		&User::operator=(const User &other)
 	this->_realname = other.getRealname();
 	this->_username = other.getUsername();
 	this->_nickname = other.getNickname();
-	this->_voicestate = other.getVoiceState();
 	return (*this);
 }
 
@@ -73,11 +72,6 @@ std::string	User::getIp() const
 	return (_ip);
 }
 
-bool	User::isOperator()
-{
-	return (_operator);
-}
-
 std::string	User::getUserInfo() const 
 {
 	std::string info;
@@ -103,21 +97,6 @@ bool	User::getPasswordSent() const
 void	User::setPasswordSent(bool status)
 {
 	this->_passwordSent = status;
-}
-
-void	User::setOperator(bool Status)
-{
-	_operator = Status;
-}
-
-bool User::getVoiceState() const
-{
-	return _voicestate;
-}
-
-void User::setVoiceState(bool state)
-{
-	_voicestate = state;
 }
 
 void User::resetChannel(Channel * channel)

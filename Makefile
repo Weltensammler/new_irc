@@ -1,8 +1,8 @@
-NAME = ft_irc
+NAME = ircserv
 
 SRCS =	main.cpp \
-		Channel.hpp \
-		Commands.hpp \
+		Channel.cpp \
+		Commands.cpp \
 		Server.cpp \
 		User.cpp
 

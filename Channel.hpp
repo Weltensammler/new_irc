@@ -11,6 +11,7 @@ class Channel
 		std::string				_channelname;
 		std::vector<int>		_users;
 		std::vector<int>		_operators;
+		std::vector<int>		_voice_state;
 		std::vector<int>		_excludeUsers;
 		std::string				_topic;
 		bool					_topicoperator;
@@ -29,6 +30,7 @@ class Channel
 		void					addUser(int userfd);
 		void					deleteUser(int userfd);
 		void					setOperator(int operatorfd);
+		void					resetOperator(int operatorfd);
 		void					setTopicOperator(bool topicoperator);
 		bool					getTopicOperator();
 		void					setInviteOnly(bool inviteonly);
@@ -54,6 +56,9 @@ class Channel
 		void					unBanUser(int userfd);
 		bool					isModerated() const;
 		void					setModerated(bool State);
+		void					set_voice_state(int userfd);
+		void					reset_voice_state(int userfd);
+		bool					get_voice_state(int _userfd);
 };
 
 #endif

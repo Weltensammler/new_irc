@@ -8,6 +8,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <algorithm>
+#include <ctime>
 #include <string>
 #include <sstream>
 #include <poll.h>

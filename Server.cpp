@@ -212,28 +212,41 @@ bool Server::checkPassword(std::string password)
 
 void Server::parseMessage(std::string input, int clientfd)
 {
-	std::vector<std::string> sub_vec;
-	
-	if (input.find(":") != std::string::npos)
+	std::vector<std::string> com_vec;
+	std::string copyInput = input;
+
+	while (copyInput.find("\n") != std::string::npos)
 	{
-		std::string first = input.substr(0, input.find(":"));
-		std::string second = input.substr(input.find(":") + 1);
-		std::stringstream stream(first);
-		std::string word;
-		while (stream >> word)
-			sub_vec.push_back(word);
-		sub_vec.push_back(second);
+		std::string sub = copyInput.substr(0, copyInput.find("\n"));
+		com_vec.push_back(sub);
+		copyInput = copyInput.substr(copyInput.find("\n") + 1);
 	}
-	else
+
+	std::vector<std::string>::iterator it = com_vec.begin();
+	for (;it != com_vec.end(); it++)
 	{
-		std::stringstream stream(input);
-		std::string word;
-		while (stream >> word)
-			sub_vec.push_back(word);
+		std::vector<std::string> sub_vec;
+		if ((*it).find(":") != std::string::npos)
+		{
+			std::string first = (*it).substr(0, (*it).find(":"));
+			std::string second = (*it).substr((*it).find(":") + 1);
+			std::stringstream stream(first);
+			std::string word;
+			while (stream >> word)
+				sub_vec.push_back(word);
+			sub_vec.push_back(second);
+		}
+		else
+		{
+			std::stringstream stream((*it));
+			std::string word;
+			while (stream >> word)
+				sub_vec.push_back(word);
+		}
+		Commands* command = new Commands(sub_vec, clientfd, *this);
+		command->determineCommand();
+		delete command;
 	}
-	Commands* command = new Commands(sub_vec, clientfd, *this);
-	command->determineCommand();
-	delete command;
 }
 
 std::map<int, User*> Server::getUsers() const

@@ -13,8 +13,6 @@ class User
 		std::string				_nickname;
 		std::string				_ip;
 		std::vector<Channel*>	_channels;
-		bool					_operator;
-		bool					_voicestate;
 		bool					_authorized;
 		bool					_passwordSent;
 		int						_fd;
@@ -35,15 +33,11 @@ class User
 		void					setChannel(Channel * channel);
 		void					resetChannel(Channel *channel);
 		std::vector<Channel*>	getChannels();
-		bool					isOperator();
-		void					setOperator(bool Status);
 		std::string 			getUserInfo() const;
 		bool					getAuth() const;
 		void					setAuth(bool status);
 		bool					getPasswordSent() const;
 		void					setPasswordSent(bool state);
-		bool					getVoiceState() const;
-		void					setVoiceState(bool state);
 };
 
 #endif
