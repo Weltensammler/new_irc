@@ -372,6 +372,10 @@ void Commands::inviteCommand()
 	//send RPL_INVITE to inviter	done
 	sendReplyToUser(RPL_INVITING, " " + _message[1] + " " + _message[2] + "\n", _userfd);
 	//send INVITE msg to invited user
+	std::stringstream invitemessage;
+	invitemessage << ":" + _server.findUserByFd(_userfd)->getNickname() + "!" + _server.findUserByFd(_userfd)->getUserInfo() + " INVITE " + usertoadd->getNickname() + " :" + _message[2] + "\r\n";
+	std::string invitestring = invitemessage.str();
+	write(usertoadd->getFd(), invitestring.c_str(), invitestring.length());
 }
 
 void Commands::topicCommand()
