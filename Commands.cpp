@@ -55,11 +55,10 @@ void	Commands::determineCommand()
 		case MODE:
 			this->modeCommand();
 			break;
-		case WHO:
-			this->whoCommand();
-			break;
+		// case WHO:
+		// 	this->whoCommand();
+		// 	break;
 		default:
-			this->sendMessage();
 			break;
 	};
 }
@@ -69,17 +68,17 @@ commandEnum	Commands::gettype()
 	return (this->_type);
 }
 
-void	Commands::whoCommand()
-{
-	//"<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
-	std::vector<int> users =  _server.findChannel(_message[1])->getUsers();
-	std::string msg = "";
-	std::vector<int>::iterator it = users.begin();
-	for (; it != users.end(); it++) {
+// void	Commands::whoCommand()
+// {
+// 	//"<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
+// 	std::vector<int> users =  _server.findChannel(_message[1])->getUsers();
+// 	std::string msg = "";
+// 	std::vector<int>::iterator it = users.begin();
+// 	for (; it != users.end(); it++) {
 
-		// msg += std::to_string(*it) + _message[1] + _server.findUserByFd(*it)->getUsername() + "OurIRCServer" + "OurIRCServer" + _server.findUserByFd(*it)->getNickname() + 'H' + ' :' + _server.findUserByFd(*it)->getRealname();
-	}
-}
+// 		// msg += std::to_string(*it) + _message[1] + _server.findUserByFd(*it)->getUsername() + "OurIRCServer" + "OurIRCServer" + _server.findUserByFd(*it)->getNickname() + 'H' + ' :' + _server.findUserByFd(*it)->getRealname();
+// 	}
+// }
 
 void Commands::passCommand()
 {
@@ -182,7 +181,7 @@ void Commands::noticeCommand()
 	if (reciverNick.at(0) == '#')
 		sendMessageToChannel(_server.findChannel(this->_message[1]), ":" +
 								this->_server.findUserByFd(_userfd)->getNickname() + " " + "NOTICE" +
-								" " + this->_message[1] + " :"+ this->_message[2] + "\r\n", false);
+								" " + this->_message[1] + " :"+ this->_message[2] + "\r\n", true);
 	else
 		sendMessageToUser("NOTICE");
 }
@@ -454,7 +453,7 @@ void Commands::modeCommand()
 		return;
 	//TODO message size 2 and message[1] channel exists send channel modes to client 
 	if (_message.size() == 2 && _server.findChannel(_message[1]))
-		sendMessageToUser(":MODE #ch1 m");
+		sendMessageToUser(":OurIRCServer! MODE #ch1 +m");
 	//*check for add or remove option, is nothing given -> undefined behavior -> add
 	std::string m_char;
 	bool add;
@@ -605,6 +604,22 @@ void Commands::modeCommand()
 		User*user = _server.findUserByNick(this->_message[3]);
 		if (add == true)
 		{
+			std::string message;
+			if (_message.size() == 4)
+				message = this->_message[3];
+			else
+				message = "An Operator kicked you from the channel!";
+			std::vector<Channel *> channels = _server.findUserByFd(_userfd)->getChannels();
+			std::vector<Channel *>::iterator it = std::find(channels.begin(), channels.end(), _server.findChannel(_message[1]));
+			if (it != channels.end())
+			{
+				std::cout << "Erase linked Channel from User" << (*it)->getChannelName() << std::endl;
+				sendMessageToChannel(*it, ":OurIRCServer!" + _server.findUserByFd(_userfd)->getUserInfo() + " KICK " + _message[1]
+									+ " " + user->getNickname() + " " + _server.findUserByFd(_userfd)->getNickname() + " " + message + "\r\n", true);
+				channels.erase(it);
+				_server.findChannel(this->_message[1])->deleteUser(user->getFd());
+				_server.findChannel(this->_message[1])->decrementUserNumb();
+			}
 			channel->banUser(user->getFd());
 			user->resetChannel(channel);
 		}
@@ -623,12 +638,6 @@ void	Commands::sendTopicToAllUsersOfChannel(std::vector<int> users, Channel *cha
 	{
 		sendReplyToUser(RPL_TOPIC, channel->getTopic(), *it, channel->getChannelName());
 	}
-}
-
-void Commands::sendMessage()
-{
-	std::cout << "Command SEND MESSAGE" << std::endl;
-	std::cout << "---------------------" << std::endl;
 }
 
 std::vector<std::string>	Commands::splitArgs(int i)

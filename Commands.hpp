@@ -44,7 +44,6 @@ class Commands
 		void						kickCommand();
 		void						modeCommand();
 		void						whoCommand();
-		void						sendMessage();
 		std::vector<std::string>	splitArgs(int i);
 		bool						checkIfNicknameAlreadyUsed(std::string nickname);
 		bool						_allowedCharacter(char c);
