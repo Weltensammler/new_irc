@@ -115,7 +115,7 @@ int Server::connectUser()
 				if (j < MAX_USER)
 				{
 					this->_polls[j].fd = userSocket;
-					this->_polls[j].events = POLLIN; //? do we need this line
+					this->_polls[j].events = POLLIN;
 					this->_polls[j].revents = 0;
 					User* new_user = new User(userSocket);
 					this->_users.insert(std::make_pair(userSocket, new_user));

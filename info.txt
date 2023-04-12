@@ -1,10 +1,12 @@
 Tasks:
 	- modechanges Serverresponse to MODE <channelname>
-		:<prefix> MODE <channelname> <modechanges> 
+		:<prefix> MODE <channelname> <modechanges>
+	- send message
+	- notice											done		--Erledigt--	notice geht an channel nicht an user 
 	- authenticate										done		--Erledigt--	--Getestet--
 	- set NickName										done		--Erledigt--	--Getestet--
 	- set Username										done		--Erledigt--	--Getestet--
-	- join channel										done		--Erledigt--	only ban test left
+	- join channel										done		--Erledigt--	--Getestet--
 	- send receive privmsg								done		--Erledigt--	--Getestet--
 	- operators and regular users						done		--Erledigt--	
 	- implement operator commands						99%
@@ -19,7 +21,7 @@ Tasks:
 	- KICK					--Erledigt--																								--Getestet--
 	- TOPIC 				--Erledigt--																								--Getestet--
 	- INVITE				--Erledigt--																								--Getestet--
-	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)--Erledigt--
+	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)--Erledigt--																				--Getestet--
 		modes:
 			channel:
 			- t (only operators can change topic) --Erledigt Ben--																		--Getestet--
@@ -30,7 +32,7 @@ Tasks:
 			user:
 			- o (makes a user operator) --Erledigt Tom--																				--Getestet--
 			- v (gives a user voice status, can talk even if channel is in moderation mode) --Erledigt Tom--							--Getestet--
-			- b (Ban user from Channel) --Erledigt Tom--																				--OFFEN--
+			- b (Ban user from Channel) --Erledigt Tom--																				--Getestet--
 			
 
 	Optional

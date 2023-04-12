@@ -23,7 +23,6 @@ Commands::~Commands() {}
 
 void	Commands::determineCommand()
 {
-	std::cout << "determine aufgerufen mit: " << this->gettype() << std::endl;
 	switch (this->gettype())
 	{
 		case PASS:
@@ -88,22 +87,18 @@ void Commands::passCommand()
 	std::cout << "---------------------" << std::endl;
 	if (_server.getPassword().empty())
 	{
-		std::cout << "PASS leer!" << std::endl;
 		return;
 	}
 	if (this->_message[1].empty())
 	{
-		std::cout << "PASS zu wenig!" << std::endl;
 		sendError(ERR_NEEDMOREPARAMS, "");
 		return;
 	}
 	if (!_server.checkPassword(this->_message[1]))
 	{
-		std::cout << "PASS falsch!" << std::endl;
 		sendError(ERR_PASSWDMISMATCH, "");
 		return;
 	}
-	std::cout << "PASS richtig!" << std::endl;
 	this->_server.findUserByFd(_userfd)->setAuth(true);
 	return;
 }
@@ -131,20 +126,11 @@ void Commands::nickCommand()
 	std::cout << "Command NICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	if (this->_message.size() < 2)
-	{
-		std::cout << "Error: ERR_NONICKNAMEGIVEN" << std::endl;
 		return sendError(ERR_NONICKNAMEGIVEN, "");
-	}
 	if (this->checkIfNicknameAlreadyUsed(this->_message[1]))
-	{
-		std::cout << "Error: ERR_NICKNAMEINUSE" << std::endl;
 		return sendError(ERR_NICKNAMEINUSE, "");
-	}
 	if (this->_message[1].size() < 9 && _validateString(this->_message[1]))
 	{
-		// std::cout << "SetNickename "<< _message[1] << std::endl;
-		// std::cout << "---------------------" << std::endl;
-		// _server.printusers();
 		std::string oldNick = this->_server.findUserByFd(_userfd)->getNickname();
 		this->_server.findUserByFd(_userfd)->setNickname(this->_message[1]);
 		if (this->_server.findUserByFd(_userfd)->getChannels().size() != 0)
@@ -154,16 +140,9 @@ void Commands::nickCommand()
 			for (std::vector<Channel *>::iterator it; it != channel.end(); it++)
 				sendMessageToChannel(*it, ": "+ oldNick + " NICK " + this->_message[1] + "\r\n", true);
 		}
-		// std::cout << "userfd in nick Command: " << _userfd << " Nickname in nick Command: " << this->_message[1] << std::endl;
-		// std::cout << "Nach set Nickname " << std::endl;
-		// std::cout << "---------NICK------------" << std::endl;
-		// _server.printusers();
 	}
 	else
-	{
-		std::cout << "Error: ERR_ERRONEUSNICKNAME" << std::endl;
 		return sendError(ERR_ERRONEUSNICKNAME, "");
-	}
 }
 
 void Commands::privmsgCommand()
@@ -177,11 +156,9 @@ void Commands::privmsgCommand()
 	std::string	reciverNick = this->_message[1];
 	if (reciverNick.at(0) == '#')
 	{
-		std::cout << "PRIVMSG" << std::endl;
 		Channel *channel = _server.findChannel(this->_message[1]);
 		std::vector<int> ops = channel->getOperators();
 		User *user =  this->_server.findUserByFd(_userfd);
-		std::cout << "OP-Status ---> " << (std::find(ops.begin(), ops.end(), _userfd) == ops.end()) << std::endl;
 		if (channel->isModerated() == true && !channel->get_voice_state(user->getFd()) && std::find(ops.begin(), ops.end(), _userfd) == ops.end())
 		{
 			return sendError(ERR_CHANOPRIVSNEEDED, "");
@@ -214,7 +191,6 @@ void Commands::joinCommand()
 {
 	std::cout << "Command JOIN" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	std::cout << "Nickname = " << _server.findUserByFd(_userfd)->getNickname() << std::endl;
 	if (this->_message.size() < 2)
 		return sendError(ERR_NEEDMOREPARAMS, "");
 	std::vector<std::string> newchannels = splitArgs(1);
@@ -224,10 +200,7 @@ void Commands::joinCommand()
 	{
 		Channel				*channel;
 		if (newchannels[i][0] != '#')
-		{
-			std::cout << "Wrong channel name!" << std::endl;
 			return sendError(ERR_NOSUCHCHANNEL,"");
-		}
 		channel = _server.findChannel(newchannels[i]);
 		if (!channel)
 		{
@@ -235,15 +208,12 @@ void Commands::joinCommand()
 				_server.setChannel(channel);
 				_server.findUserByFd(_userfd)->setChannel(channel);
 				channel->setOperator(_userfd);
-				std::cout << "user join 207: "<< this->_server.findUserByFd(_userfd)->getUsername() << " user fd: " << _userfd << std::endl;
-				std::cout << "Adduser to Channel Join 1 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
 				channel->incrementUserNumb();
 				channel->setOperator(_userfd);
 		}
 		else
 		{
-			std::cout << "Join Command in der Else in der inneren IF" << std::endl;
 			//*Check if User is Baned from the Channel
 			if (channel->isUserBaned(_userfd) == true)
 				return sendError(ERR_BANNEDFROMCHAN, "");
@@ -251,7 +221,6 @@ void Commands::joinCommand()
 			if (channel->getlimit() == -1 || channel->getlimit() > channel->currUserNumbs())
 			{
 				this->_server.findUserByFd(_userfd)->setChannel(channel);
-				std::cout << "Add User to Channnel Join 2 Command: " << _userfd << std::endl;
 				channel->addUser(_userfd);
 				channel->incrementUserNumb();
 			}
@@ -278,17 +247,11 @@ void Commands::joinCommand()
 		}
 		names << "\r\n";
 		std::string namesString = names.str();
-		std::cout << "Namestring: " << namesString << std::endl;
 		sendMessageToChannel(channel, namesString, true);
-		// write(_userfd, namesString.c_str(), namesString.length());
-		// write(1, namesString.c_str(), namesString.length());
 
 		std::stringstream endOfNamesList;
 		endOfNamesList << ":" + _server.getServername() + " 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 		std::string endOfNamesListString = endOfNamesList.str();
-		sendMessageToChannel(channel, endOfNamesListString, true);
-		// write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
-		// write(1, endOfNamesListString.c_str(), endOfNamesListString.length());
 		sendMessageToChannel(channel, endOfNamesListString, true);
 	}
 }
@@ -303,21 +266,14 @@ void Commands::inviteCommand()
 	if (!_server.findChannel(this->_message[2]))
 		return sendError(ERR_NOSUCHCHANNEL, "");
 	if (!checkIfUserOnChannel(this->_message[2], _userfd))
-	{
-		std::cout << "you are not on channel" << std::endl;
 		return sendError(ERR_NOTONCHANNEL, "");
-	}
 	if (_server.findChannel(this->_message[2])->getInviteOnly())
 	{
 		if (!checkIfOperator(this->_message[2], _userfd))
-		{
-			std::cout << "no operator" << std::endl;
 			return sendError(ERR_CHANOPRIVSNEEDED, "");
-		}
 	}
 	if (_server.findUserByNick(_message[1]))
 	{
-		std::cout << "why does this not work?" << "message[1] " << _message[1] << " message[2] " << _message[2] << std::endl;
 		if (checkIfUserOnChannel(this->_message[2], _server.findUserByNick(_message[1])->getFd()))
 			return sendError(ERR_USERONCHANNEL, "");
 	}
@@ -367,7 +323,6 @@ void Commands::inviteCommand()
 	std::stringstream endOfNamesList;
 	endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << channel->getChannelName() << " :End of /NAMES list.\r\n";
 	std::string endOfNamesListString = endOfNamesList.str();
-	// write(usertoadd->getFd(), endOfNamesListString.c_str(), endOfNamesListString.length());
 	sendMessageToChannel(channel, endOfNamesListString, true);
 	//send RPL_INVITE to inviter	done
 	sendReplyToUser(RPL_INVITING, " " + _message[1] + " " + _message[2] + "\n", _userfd);
@@ -436,32 +391,17 @@ void Commands::kickCommand()
 {
 	std::cout << "Command KICK" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	//numeric replies:
-	//ERR_NEEDMOREPARAMS	done
-	//ERR_NOSUCHCHANNEL		done
-	//ERR_CHANOPRIVSNEEDED	done
-	//ERR_USERNOTINCHANNEL	done
-	//ERR_NOTONCHANNEL		done
-	//TODO tests funktionieren noch nicht so ganz check if operator sieht gut aus aber beim Rest hakt es noch
-	std::cout << "message 1: " << this->_message[1] << "\nmessage 2: " << this->_message[2] << std::endl;
-
 	if (checkMain(3) == false)
 		return;
 	if (_server.findUserByNick(this->_message[2]))
 	{
 		if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[2])->getFd()))
-		{
-			std::cout << "user not in channel" << std::endl;
 			return sendError(ERR_USERNOTINCHANNEL, "");
-		}
 	}
 	else
 		return sendError(ERR_USERNOTINCHANNEL, "");
 	if (!checkIfUserOnChannel(this->_message[1], _userfd))
-	{
-		std::cout << "you are not on channel" << std::endl;
 		return sendError(ERR_NOTONCHANNEL, "");
-	}
 	//---------------------//
 
 
@@ -502,7 +442,6 @@ bool	Commands::checkIfUserOnChannel(std::string channel, int userfd)
 {
 	if (!_server.findChannel(channel)->isOnCchannel(userfd))
 		return (false);
-	std::cout << "why channel: " << channel << "userfd " << userfd << std::endl;
 	return (true);
 }
 
@@ -511,8 +450,11 @@ void Commands::modeCommand()
 	std::cout << "Command MODE" << std::endl;
 	std::cout << "---------------------" << std::endl;
 	//*check if channel exists, is operator and check msg size
-	if (checkMain(3,4) == false)
+	if (checkMain(2,4) == false)
 		return;
+	//TODO message size 2 and message[1] channel exists send channel modes to client 
+	if (_message.size() == 2 && _server.findChannel(_message[1]))
+		sendMessageToUser(":MODE #ch1 m");
 	//*check for add or remove option, is nothing given -> undefined behavior -> add
 	std::string m_char;
 	bool add;
@@ -576,17 +518,11 @@ void Commands::modeCommand()
 	{
 		// o (makes a user operator)
 		if (!checkIfUserOnChannel(this->_message[1], _userfd))
-		{
-			std::cout << "you are not on channel" << std::endl;
 			return sendError(ERR_NOTONCHANNEL, "");
-		}
 		if (_server.findUserByNick(this->_message[3]))
 		{
 			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
-			{
-				std::cout << "user not in channel" << std::endl;
 				return sendError(ERR_USERNOTINCHANNEL, "");
-			}
 		}
 		else
 			return sendError(ERR_NOSUCHNICK, "");
@@ -617,7 +553,6 @@ void Commands::modeCommand()
 		}
 		else
 		{
-			std::cout << "I'm here" << std::endl;
 			_server.findChannel(this->_message[1])->resetOperator(_server.findUserByNick(this->_message[3])->getFd());
 			std::stringstream names;
 			std::vector<int> users = _server.findChannel(this->_message[1])->getUsers();
@@ -635,12 +570,10 @@ void Commands::modeCommand()
 			}
 			names << "\r\n";
 			std::string namesString = names.str();
-			// write(_userfd, namesString.c_str(), namesString.length());
 			sendMessageToChannel(_server.findChannel(this->_message[1]), namesString, true);
 			std::stringstream endOfNamesList;
 			endOfNamesList << ":" + _server.getServername() +" 366 " << _server.findUserByFd(_userfd)->getNickname() << " " << _server.findChannel(this->_message[1])->getChannelName() << " :End of /NAMES list.\r\n";
 			std::string endOfNamesListString = endOfNamesList.str();
-			// write(_userfd, endOfNamesListString.c_str(), endOfNamesListString.length());
 			sendMessageToChannel(_server.findChannel(this->_message[1]), endOfNamesListString, true);
 		}
 	}
@@ -648,17 +581,11 @@ void Commands::modeCommand()
 	{
 		//* v (gives a user voice status, can talk even if channel is in moderation mode)
 		if (!checkIfUserOnChannel(this->_message[1], _userfd))
-		{
-			std::cout << "you are not on channel" << std::endl;
 			return sendError(ERR_NOTONCHANNEL, "");
-		}
 		if (_server.findUserByNick(this->_message[3]))
 		{
 			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
-			{
-				std::cout << "user not in channel" << std::endl;
 				return sendError(ERR_USERNOTINCHANNEL, "");
-			}
 		}
 		else
 			return sendError(ERR_NOSUCHNICK, "");
@@ -671,24 +598,11 @@ void Commands::modeCommand()
 	{
 		// b (specified user can't access the channel)
 		if (!checkIfUserOnChannel(this->_message[1], _userfd))
-		{
-			std::cout << "you are not on channel" << std::endl;
 			return sendError(ERR_NOTONCHANNEL, "");
-		}
-		if (_server.findUserByNick(this->_message[3]))
-		{
-			if (!checkIfUserOnChannel(this->_message[1], _server.findUserByNick(this->_message[3])->getFd()))
-			{
-				std::cout << "user not in channel" << std::endl;
-				return sendError(ERR_USERNOTINCHANNEL, "");
-			}
-		}
-		else
+		if (!_server.findUserByNick(this->_message[3]))
 			return sendError(ERR_NOSUCHNICK, "");
-		
 		Channel	*channel = _server.findChannel(_message[1]);
 		User*user = _server.findUserByNick(this->_message[3]);
-
 		if (add == true)
 		{
 			channel->banUser(user->getFd());
@@ -1016,17 +930,12 @@ void	Commands::sendMessageToChannel(Channel *channel, std::string string, bool s
 	std::vector<int>	users = channel->getUsers();
 	for (std::vector<int>::iterator it = users.begin(); it != users.end(); ++it)
 	{
-		std::cout << "it == " << *it << " | self == " << self << std::endl;
 		if (*it != _userfd || self == true)
 		{
 			int fd = *it;
 			write(fd, string.c_str(), string.length());
 			// std::cout << "fd = " << fd << std::endl << "vector size users = " << users.size() << std::endl << "vector size channel users = " << channel->getUsers().size() << std::endl;
-			write(1, string.c_str(), string.length());
-			std::cout <<std::endl;
 		}
-		else
-			std::cout << "WIRD NICHT GESENDET User fd == " << *it << std::endl;
 	}
 }
 
@@ -1059,7 +968,6 @@ bool Commands::checkMain(int MinMsgSize, int MaxMsgSize)
 {
 	if (this->_message.size() < MinMsgSize)
 	{
-		std::cout << "Parameter zu wenig" << std::endl;
 		sendError(ERR_NEEDMOREPARAMS, "");
 		return false;
 	}
@@ -1067,20 +975,17 @@ bool Commands::checkMain(int MinMsgSize, int MaxMsgSize)
 	{
 		if (this->_message.size() > MaxMsgSize)
 		{
-			std::cout << "Parameter zu viele" << std::endl;
 			sendError(ERR_TOOMANYPARAMS, "");
 			return false;
 		}
 	}
 	if (!_server.findChannel(this->_message[1]))
 	{
-		std::cout << "no channel" << std::endl;
 		sendError(ERR_NOSUCHCHANNEL, "");
 		return false;
 	}
 	if (!checkIfOperator(this->_message[1], _userfd))
 	{
-		std::cout << "no operator" << std::endl;
 		sendError(ERR_CHANOPRIVSNEEDED, "");
 		return false;
 	}
