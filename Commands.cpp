@@ -297,7 +297,6 @@ void Commands::inviteCommand()
 {
 	std::cout << "Command INVITE" << std::endl;
 	std::cout << "---------------------" << std::endl;
-	//TODO RPL_INVITING muss noch gemacht werden
 
 	if (this->_message.size() < 3)
 		return sendError(ERR_NEEDMOREPARAMS, "");
@@ -318,7 +317,8 @@ void Commands::inviteCommand()
 	}
 	if (_server.findUserByNick(_message[1]))
 	{
-		if (!checkIfUserOnChannel(this->_message[2], _server.findUserByNick(_message[1])->getFd()))
+		std::cout << "why does this not work?" << "message[1] " << _message[1] << " message[2] " << _message[2] << std::endl;
+		if (checkIfUserOnChannel(this->_message[2], _server.findUserByNick(_message[1])->getFd()))
 			return sendError(ERR_USERONCHANNEL, "");
 	}
 	else
@@ -500,8 +500,9 @@ bool	Commands::checkIfOperator(std::string channel, int userfd)
 
 bool	Commands::checkIfUserOnChannel(std::string channel, int userfd)
 {
-	if (!_server.findChannel(channel)->isOnCchannel(_userfd))
+	if (!_server.findChannel(channel)->isOnCchannel(userfd))
 		return (false);
+	std::cout << "why channel: " << channel << "userfd " << userfd << std::endl;
 	return (true);
 }
 

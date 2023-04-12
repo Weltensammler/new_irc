@@ -4,10 +4,10 @@ Tasks:
 	- authenticate										done		--Erledigt--	--Getestet--
 	- set NickName										done		--Erledigt--	--Getestet--
 	- set Username										done		--Erledigt--	--Getestet--
-	- join channel										done		--Erledigt--	
+	- join channel										done		--Erledigt--	only ban test left
 	- send receive privmsg								done		--Erledigt--	--Getestet--
 	- operators and regular users						done		--Erledigt--	
-	- implement operator commands						80%
+	- implement operator commands						99%
 	- assemble incomplete messages (check for /r/n)		90% should work now but only checking for newline, not \r\n
 	- delete partial message if client disconnects		done
 	- last part Networking specials (eval sheet)
@@ -18,12 +18,12 @@ Tasks:
 	- KILL maybe not implement this one due to documentation here (https://datatracker.ietf.org/doc/html/rfc2812#section-3.7.1)--Erledigt--
 	- KICK					--Erledigt--																								--Getestet--
 	- TOPIC 				--Erledigt--																								--Getestet--
-	- INVITE																															--OFFEN--
+	- INVITE				--Erledigt--																								--Getestet--
 	- MODE (chance ) /MODE #ch1 +or-"mode"(+t)--Erledigt--
 		modes:
 			channel:
 			- t (only operators can change topic) --Erledigt Ben--																		--Getestet--
-			- i (sets channel status to invite only, only operators can invite users) --Erledigt Ben--									--OFFEN--
+			- i (sets channel status to invite only, only operators can invite users) --Erledigt Ben--									--Getestet--
 			- m (sets channel status to moderated only operators and users with voice status can send messages) --Erledigt Tom--		--Getestet--
 			- l (set client limit to channel) --Erledigt Tom--																			--Getestet--
 			

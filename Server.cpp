@@ -185,7 +185,6 @@ void Server::mainLoop()
 			std::cout << "There is an error" << std::endl;
 			break;
 		default:
-			// std::cout << "begin of the default switch" << std::endl;
 			this->connectUser();
 			break;
 		}

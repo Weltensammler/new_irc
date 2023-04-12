@@ -78,6 +78,7 @@ bool	Channel::isOnCchannel(int userfd)
 {
 	for (std::vector<int>::iterator it = _users.begin(); it != _users.end(); it++)
 	{
+		std::cout << "isonchannel userfd: " << userfd << " it: " << *it << std::endl;
 		if (*it == userfd)
 			return (true);
 	}
